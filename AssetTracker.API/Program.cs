@@ -1,23 +1,32 @@
+using AssetTracker.API.Data;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// 1. Patrón Corporativo: Leer conexión desde appsettings.json
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("La cadena de conexión 'DefaultConnection' no se encontró.");
 
+// 2. Registrar DbContext con SQLite (Consigna 6)
+builder.Services.AddDbContext<AssetTrackerContext>(options =>
+    options.UseSqlite(connectionString));
+
+// 3. Agregar servicios de Controladores y Swagger UI
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(); // ← Swagger UI
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// 4. Configurar el pipeline HTTP
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI(); // ← Interfaz visual de Swagger
 }
 
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();
