@@ -6,11 +6,8 @@ public abstract class Activo
     public string Nombre { get; set; } = string.Empty;
     public DateTime FechaAdquisicion { get; set; }
     public decimal ValorOriginal { get; set; }
-
-    // Encapsulamiento: solo se puede modificar mediante el método CambiarEstado (Consigna 1)
     public string Estado { get; private set; } = "Disponible";
 
-    // Comportamiento propio (Consigna 1 y 10)
     public void CambiarEstado(string nuevoEstado)
     {
         if (string.IsNullOrWhiteSpace(nuevoEstado))
@@ -22,13 +19,11 @@ public abstract class Activo
         Estado = nuevoEstado;
     }
 
-    // Polimorfismo (Consigna 3)
     public virtual string ObtenerDetallesEspecificos()
     {
         return $"Activo: {Nombre} | Valor: {ValorOriginal:C} | Estado: {Estado}";
     }
 
-    // Validaciones de dominio (Consigna 10)
     public void Validar()
     {
         if (string.IsNullOrWhiteSpace(Nombre))

@@ -31,11 +31,9 @@ public class ActivosController : ControllerBase
         return activo;
     }
 
-    // ESTE ES EL MÉTODO QUE DEBE USAR EL DTO
     [HttpPost]
     public async Task<ActionResult<Activo>> PostActivo(CrearActivoDto dto)
     {
-        // VALIDACIÓN MANUAL INMEDIATA
         if (string.IsNullOrWhiteSpace(dto.Nombre))
             return BadRequest(new { error = "El nombre es obligatorio." });
 
