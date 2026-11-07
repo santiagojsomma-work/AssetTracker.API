@@ -1,0 +1,158 @@
+﻿@page
+@using AssetTracker.Web.Helpers
+@model AssetTracker.Web.Pages.Activos.IndexModel
+@{
+    ViewData["Title"] = "Activos";
+    var esAdmin = User.IsInRole("Administrador");
+}
+
+<div class="page-header">
+    <h1><i class="bi bi-box-seam"></i> Activos</h1>
+    <p class="lead">Gestión de activos físicos y digitales de la organización</p>
+</div>
+
+@* ===== Barra de filtros avanzados (formulario GET) ===== *@
+<form method="get" class="filtros-bar">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label mb-1">Buscar</label>
+            <input type="text" name="FiltroTexto" value="@Model.FiltroTexto"
+                   class="form-control" placeholder="Nombre, código, serie o licencia…" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label mb-1">Estado</label>
+            <select name="FiltroEstado" class="form-select">
+                <option value="">Todos los estados</option>
+                @foreach (var estado in Model.Estados)
+                {
+                    <option value="@estado" selected="@(Model.FiltroEstado == estado)">@estado</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label mb-1">Ordenar por</label>
+            <select name="OrdenarPor" class="form-select">
+                <option value="nombre" selected="@(Model.OrdenarPor == "nombre")">Nombre</option>
+                <option value="valor" selected="@(Model.OrdenarPor == "valor")">Valor</option>
+                <option value="fecha" selected="@(Model.OrdenarPor == "fecha")">Fecha</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <div class="form-check mb-2">
+                <input type="checkbox" name="Descendente" value="true"
+                       class="form-check-input" id="chkDesc" checked="@Model.Descendente" />
+                <label class="form-check-label" for="chkDesc">Descendente</label>
+            </div>
+        </div>
+        <div class="col-md-2 d-flex gap-2">
+            <button type="submit" class="btn btn-primary flex-fill">
+                <i class="bi bi-funnel"></i> Filtrar
+            </button>
+            <a asp-page="Index" class="btn btn-outline-secondary" title="Limpiar filtros">
+                <i class="bi bi-x-circle"></i>
+            </a>
+        </div>
+    </div>
+</form>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h5 class="mb-0"><i class="bi bi-list-ul"></i> Listado de activos</h5>
+        <div class="d-flex gap-2">
+            <a asp-page="Create" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-circle"></i> Nuevo activo
+            </a>
+            <a asp-page="Busqueda" class="btn btn-success btn-sm">
+                <i class="bi bi-search"></i> Búsqueda en vivo
+            </a>
+            <a asp-page="Depreciacion" class="btn btn-warning btn-sm">
+                <i class="bi bi-graph-down-arrow"></i> Depreciación
+            </a>
+        </div>
+    </div>
+
+    <div class="card-body p-0">
+        @if (Model.Error is not null)
+        {
+            <div class="alert alert-danger m-3">
+                <i class="bi bi-exclamation-triangle"></i> @Model.Error
+            </div>
+        }
+        else if (Model.Activos.Count == 0)
+        {
+            <div class="text-center p-5">
+                <i class="bi bi-inbox text-muted" style="font-size: 4rem;"></i>
+                <h4 class="mt-3 text-muted-custom">No se encontraron activos</h4>
+                <p class="text-muted-custom">Probá con otros filtros o creá un activo nuevo</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Nombre</th>
+                            <th>Estado</th>
+                            <th class="text-end">Valor</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var activo in Model.Activos)
+                        {
+                            <tr>
+                                <td><code class="fw-bold">@activo.CodigoInterno</code></td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="bi @(activo.TipoActivo == "Físico" ? "bi-box" : "bi-laptop") text-primary" style="font-size: 1.2rem;"></i>
+                                        <div>
+                                            <div class="fw-bold">@activo.Nombre</div>
+                                            <small class="text-muted-custom">@activo.TipoActivo</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge-estado @EstadoActivoHelper.Badge(activo.Estado)">
+                                        <i class="bi @EstadoActivoHelper.Icono(activo.Estado)"></i>
+                                        @activo.Estado
+                                    </span>
+                                </td>
+                                <td class="text-end fw-bold">@activo.ValorOriginal.ToString("C")</td>
+                                <td class="text-center">
+                                    <div class="btn-group" role="group">
+                                        <a asp-page="Details" asp-route-id="@activo.Id"
+                                           class="btn btn-outline-info btn-sm" title="Ver detalles">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a asp-page="Edit" asp-route-id="@activo.Id"
+                                           class="btn btn-outline-primary btn-sm" title="Editar">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        @if (esAdmin)
+                                        {
+                                            <a asp-page="Delete" asp-route-id="@activo.Id"
+                                               class="btn btn-outline-danger btn-sm" title="Eliminar">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card-footer bg-white d-flex justify-content-between flex-wrap gap-2">
+                <small class="text-muted-custom">
+                    <i class="bi bi-info-circle"></i> @Model.Activos.Count activo(s)
+                </small>
+                <small class="text-muted-custom">
+                    Valor total filtrado: <strong>@Model.TotalValor.ToString("C")</strong>
+                </small>
+            </div>
+        }
+    </div>
+</div>

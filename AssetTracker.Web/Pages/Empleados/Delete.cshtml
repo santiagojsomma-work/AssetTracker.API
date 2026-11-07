@@ -1,0 +1,47 @@
+﻿@page "{id:int}"
+@model AssetTracker.Web.Pages.Empleados.DeleteModel
+@{
+    ViewData["Title"] = "Eliminar empleado";
+}
+
+<h1>Eliminar empleado</h1>
+
+@if (Model.Error is not null)
+{
+    <div class="alert alert-danger">
+        @Model.Error
+    </div>
+}
+
+@if (Model.Empleado == null)
+{
+    <div class="alert alert-warning">No se encontró el empleado.</div>
+    <a asp-page="Index" class="btn btn-secondary">Volver</a>
+}
+else
+{
+    <div class="alert alert-warning">
+        <h4>¿Confirma eliminar a "@Model.Empleado.NombreCompleto"?</h4>
+        <p>Esta acción eliminará también todas sus asignaciones asociadas.</p>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">ID</dt>
+                <dd class="col-sm-9">@Model.Empleado.Id</dd>
+
+                <dt class="col-sm-3">Nombre</dt>
+                <dd class="col-sm-9">@Model.Empleado.NombreCompleto</dd>
+
+                <dt class="col-sm-3">Departamento</dt>
+                <dd class="col-sm-9">@Model.Empleado.Departamento</dd>
+            </dl>
+        </div>
+    </div>
+
+    <form method="post">
+        <button type="submit" class="btn btn-danger">Eliminar</button>
+        <a asp-page="Index" class="btn btn-secondary">Cancelar</a>
+    </form>
+}

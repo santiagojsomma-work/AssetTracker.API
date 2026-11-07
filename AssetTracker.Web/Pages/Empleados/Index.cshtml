@@ -1,0 +1,38 @@
+﻿@page
+@model AssetTracker.Web.Pages.Empleados.IndexModel
+@{
+    ViewData["Title"] = "Empleados";
+}
+
+<h1>Empleados</h1>
+<a asp-page="Create" class="btn btn-primary mb-3">Nuevo empleado</a>
+
+@if (Model.Error is not null)
+{
+    <div class="alert alert-danger">@Model.Error</div>
+}
+else if (Model.Empleados.Count == 0)
+{
+
+    <div class="alert alert-info">No hay empleados registrados.</div>
+}
+else
+{
+    <table class="table table-striped">
+        <thead><tr><th>ID</th><th>Nombre</th><th>Departamento</th><th>Acciones</th></tr></thead>
+        <tbody>
+            @foreach (var emp in Model.Empleados)
+            {
+                <tr>
+                    <td>@emp.Id</td>
+                    <td>@emp.NombreCompleto</td>
+                    <td>@emp.Departamento</td>
+                    <td>
+                        <a asp-page="Edit" asp-route-id="@emp.Id" class="btn btn-sm btn-primary">Editar</a>
+                        <a asp-page="Delete" asp-route-id="@emp.Id" class="btn btn-sm btn-danger">Eliminar</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

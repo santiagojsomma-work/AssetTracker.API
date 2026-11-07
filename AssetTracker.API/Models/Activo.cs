@@ -1,27 +1,56 @@
 ﻿namespace AssetTracker.API.Models;
 
+/// <summary>
+/// Entidad base abstracta de la jerarquía TPH de activos.
+/// </summary>
 public abstract class Activo
 {
     public int Id { get; set; }
+
+    /// <summary>
+    /// Código interno autogenerado (ej: ACT-0001).
+    /// Lo asigna el repositorio al persistir y es INMUTABLE.
+    /// </summary>
+    public string? CodigoInterno { get; private set; }
+
     public string Nombre { get; set; } = string.Empty;
     public DateTime FechaAdquisicion { get; set; }
     public decimal ValorOriginal { get; set; }
-    public string Estado { get; private set; } = "Disponible";
 
+    public string Estado { get; private set; } = EstadosActivo.Disponible;
+
+    /// <summary>
+    /// Cambia el estado validando contra el catálogo de 10 estados.
+    /// </summary>
     public void CambiarEstado(string nuevoEstado)
     {
         if (string.IsNullOrWhiteSpace(nuevoEstado))
             throw new ArgumentException("El estado no puede estar vacío.");
 
-        if (nuevoEstado != "Disponible" && nuevoEstado != "Asignado" && nuevoEstado != "En Mantenimiento")
-            throw new ArgumentException("Estado no válido. Debe ser: Disponible, Asignado o En Mantenimiento.");
+        if (!EstadosActivo.EsValido(nuevoEstado))
+            throw new ArgumentException(
+                $"Estado no válido: '{nuevoEstado}'. Estados permitidos: {string.Join(", ", EstadosActivo.Todos)}.");
 
         Estado = nuevoEstado;
     }
 
+    /// <summary>
+    /// Asigna el código interno una única vez (inmutabilidad).
+    /// </summary>
+    public void AsignarCodigoInterno(string codigo)
+    {
+        if (!string.IsNullOrWhiteSpace(CodigoInterno))
+            throw new InvalidOperationException("El código interno ya fue asignado y es inmutable.");
+
+        if (string.IsNullOrWhiteSpace(codigo))
+            throw new ArgumentException("El código interno no puede estar vacío.");
+
+        CodigoInterno = codigo;
+    }
+
     public virtual string ObtenerDetallesEspecificos()
     {
-        return $"Activo: {Nombre} | Valor: {ValorOriginal:C} | Estado: {Estado}";
+        return $"Activo: {Nombre} | Código: {CodigoInterno ?? "s/c"} | Valor: {ValorOriginal:C} | Estado: {Estado}";
     }
 
     public void Validar()

@@ -1,0 +1,91 @@
+﻿@page
+@model AssetTracker.Web.Pages.Activos.CreateModel
+@{
+    ViewData["Title"] = "Nuevo activo";
+}
+
+<h1>Nuevo activo</h1>
+
+<form method="post">
+    <div asp-validation-summary="All" class="text-danger"></div>
+
+    <div class="mb-3">
+        <label asp-for="Input.Nombre" class="form-label"></label>
+        <input asp-for="Input.Nombre" class="form-control" />
+        <span asp-validation-for="Input.Nombre" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Input.TipoActivo" class="form-label">Tipo de activo</label>
+        <select asp-for="Input.TipoActivo" class="form-select">
+            <option value="Fisico">Físico</option>
+            <option value="Digital">Digital</option>
+        </select>
+        <span asp-validation-for="Input.TipoActivo" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Input.FechaAdquisicion" class="form-label"></label>
+        <input asp-for="Input.FechaAdquisicion" type="date" class="form-control" />
+        <span asp-validation-for="Input.FechaAdquisicion" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Input.ValorOriginal" class="form-label"></label>
+        <input asp-for="Input.ValorOriginal" type="number" step="0.01" class="form-control" />
+        <span asp-validation-for="Input.ValorOriginal" class="text-danger"></span>
+    </div>
+
+    <!-- Campos para ActivoFisico -->
+    <div id="campos-fisico">
+        <div class="mb-3">
+            <label asp-for="Input.NumeroSerie" class="form-label">Número de serie</label>
+            <input asp-for="Input.NumeroSerie" class="form-control" />
+            <span asp-validation-for="Input.NumeroSerie" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Input.Ubicacion" class="form-label">Ubicación</label>
+            <input asp-for="Input.Ubicacion" class="form-control" />
+            <span asp-validation-for="Input.Ubicacion" class="text-danger"></span>
+        </div>
+    </div>
+
+    <!-- Campos para ActivoDigital -->
+    <div id="campos-digital" style="display:none;">
+        <div class="mb-3">
+            <label asp-for="Input.ClaveLicencia" class="form-label">Clave de licencia</label>
+            <input asp-for="Input.ClaveLicencia" class="form-control" />
+            <span asp-validation-for="Input.ClaveLicencia" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Input.FechaVencimientoLicencia" class="form-label">Vencimiento de licencia</label>
+            <input asp-for="Input.FechaVencimientoLicencia" type="date" class="form-control" />
+            <span asp-validation-for="Input.FechaVencimientoLicencia" class="text-danger"></span>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Guardar</button>
+    <a asp-page="Index" class="btn btn-secondary">Cancelar</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Mostrar/ocultar campos según el tipo de activo
+        const tipoSelect = document.querySelector('#Input_TipoActivo');
+        const camposFisico = document.querySelector('#campos-fisico');
+        const camposDigital = document.querySelector('#campos-digital');
+
+        tipoSelect.addEventListener('change', function () {
+            if (this.value === 'Fisico') {
+                camposFisico.style.display = 'block';
+                camposDigital.style.display = 'none';
+            } else {
+                camposFisico.style.display = 'none';
+                camposDigital.style.display = 'block';
+            }
+        });
+    </script>
+}

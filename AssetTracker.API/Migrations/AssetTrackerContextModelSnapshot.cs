@@ -23,6 +23,9 @@ namespace AssetTracker.API.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("CodigoInterno")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Discriminator")
                         .IsRequired()
                         .HasMaxLength(13)
@@ -43,6 +46,10 @@ namespace AssetTracker.API.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CodigoInterno")
+                        .IsUnique()
+                        .HasFilter("CodigoInterno IS NOT NULL");
 
                     b.ToTable("Activos");
 

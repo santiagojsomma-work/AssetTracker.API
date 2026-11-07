@@ -1,0 +1,21 @@
+﻿@page "{id:int}"
+@model AssetTracker.Web.Pages.Asignaciones.DeleteModel
+@{
+    ViewData["Title"] = "Eliminar asignación";
+}
+
+<h1>Eliminar asignación</h1>
+@if (Model.Asignacion == null)
+{
+    <p>No encontrada.</p>
+}
+else
+{
+    <div class="alert alert-warning">
+        ¿Confirma liberar el activo <b>@Model.Asignacion.Activo?.Nombre</b> del empleado <b>@Model.Asignacion.Empleado?.NombreCompleto</b>?
+    </div>
+    <form method="post">
+        <button type="submit" class="btn btn-danger">Confirmar Liberación</button>
+        <a asp-page="Index" class="btn btn-secondary">Cancelar</a>
+    </form>
+}

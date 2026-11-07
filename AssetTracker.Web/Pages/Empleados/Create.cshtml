@@ -1,0 +1,25 @@
+﻿@page
+@model AssetTracker.Web.Pages.Empleados.CreateModel
+@{
+    ViewData["Title"] = "Nuevo empleado";
+}
+
+<h1>Nuevo empleado</h1>
+<form method="post">
+    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+    <div class="mb-3">
+        <label asp-for="Input.NombreCompleto" class="form-label"></label>
+        <input asp-for="Input.NombreCompleto" class="form-control" />
+        <span asp-validation-for="Input.NombreCompleto" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Input.Departamento" class="form-label"></label>
+        <input asp-for="Input.Departamento" class="form-control" />
+        <span asp-validation-for="Input.Departamento" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-primary">Guardar</button>
+    <a asp-page="Index" class="btn btn-secondary">Cancelar</a>
+</form>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

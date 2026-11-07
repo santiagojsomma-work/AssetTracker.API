@@ -1,0 +1,50 @@
+﻿@page "{id:int}"
+@model AssetTracker.Web.Pages.Activos.DeleteModel
+@{
+    ViewData["Title"] = "Eliminar activo";
+}
+
+<h1>Eliminar activo</h1>
+
+@if (Model.Error is not null)
+{
+    <div class="alert alert-danger">
+        @Model.Error
+    </div>
+}
+
+@if (Model.Activo == null)
+{
+    <div class="alert alert-warning">No se encontró el activo.</div>
+    <a asp-page="Index" class="btn btn-secondary">Volver</a>
+}
+else
+{
+    <div class="alert alert-warning">
+        <h4>¿Confirma eliminar "@Model.Activo.Nombre"?</h4>
+        <p>Esta acción no se puede deshacer.</p>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">ID</dt>
+                <dd class="col-sm-9">@Model.Activo.Id</dd>
+
+                <dt class="col-sm-3">Tipo</dt>
+                <dd class="col-sm-9">@Model.Activo.TipoActivo</dd>
+
+                <dt class="col-sm-3">Estado</dt>
+                <dd class="col-sm-9">@Model.Activo.Estado</dd>
+
+                <dt class="col-sm-3">Valor</dt>
+                <dd class="col-sm-9">@Model.Activo.ValorOriginal.ToString("C")</dd>
+            </dl>
+        </div>
+    </div>
+
+    <form method="post">
+        <button type="submit" class="btn btn-danger">Eliminar</button>
+        <a asp-page="Index" class="btn btn-secondary">Cancelar</a>
+    </form>
+}

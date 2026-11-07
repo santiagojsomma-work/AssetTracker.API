@@ -1,0 +1,38 @@
+﻿@page
+@model AssetTracker.Web.Pages.Asignaciones.IndexModel
+@{
+    ViewData["Title"] = "Asignaciones";
+}
+
+<h1>Asignaciones</h1>
+<a asp-page="Create" class="btn btn-primary mb-3">Nueva asignación</a>
+
+@if (Model.Error is not null)
+{
+    <div class="alert alert-danger">@Model.Error</div>
+}
+else if (Model.Asignaciones.Count == 0)
+{
+
+    <div class="alert alert-info">No hay asignaciones.</div>
+}
+else
+{
+    <table class="table table-striped">
+        <thead><tr><th>ID</th><th>Empleado</th><th>Activo</th><th>Fecha</th><th>Acciones</th></tr></thead>
+        <tbody>
+            @foreach (var asig in Model.Asignaciones)
+            {
+                <tr>
+                    <td>@asig.Id</td>
+                    <td>@(asig.Empleado?.NombreCompleto ?? "N/A")</td>
+                    <td>@(asig.Activo?.Nombre ?? "N/A")</td>
+                    <td>@asig.FechaAsignacion.ToString("dd/MM/yyyy")</td>
+                    <td>
+                        <a asp-page="Delete" asp-route-id="@asig.Id" class="btn btn-sm btn-danger">Eliminar</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

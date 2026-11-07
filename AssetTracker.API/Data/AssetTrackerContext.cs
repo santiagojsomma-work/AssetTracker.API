@@ -26,5 +26,11 @@ public class AssetTrackerContext : DbContext
             .WithMany(e => e.Asignaciones)
             .HasForeignKey(a => a.EmpleadoId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // NUEVO: código interno único (índice filtrado para permitir NULL transitorio)
+        modelBuilder.Entity<Activo>()
+            .HasIndex(a => a.CodigoInterno)
+            .IsUnique()
+            .HasFilter("CodigoInterno IS NOT NULL");
     }
 }

@@ -1,0 +1,32 @@
+﻿@page
+@model AssetTracker.Web.Pages.Asignaciones.CreateModel
+@{
+    ViewData["Title"] = "Nueva asignación";
+}
+
+<h1>Nueva asignación</h1>
+<form method="post">
+    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+    <div class="mb-3">
+        <label asp-for="Input.EmpleadoId" class="form-label">Empleado</label>
+        <select asp-for="Input.EmpleadoId" asp-items="Model.Empleados" class="form-select">
+            <option value="">-- Seleccione un empleado --</option>
+        </select>
+        <span asp-validation-for="Input.EmpleadoId" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Input.ActivoId" class="form-label">Activo (Solo disponibles)</label>
+        <select asp-for="Input.ActivoId" asp-items="Model.Activos" class="form-select">
+            <option value="">-- Seleccione un activo --</option>
+        </select>
+        <span asp-validation-for="Input.ActivoId" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Asignar</button>
+    <a asp-page="Index" class="btn btn-secondary">Cancelar</a>
+</form>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

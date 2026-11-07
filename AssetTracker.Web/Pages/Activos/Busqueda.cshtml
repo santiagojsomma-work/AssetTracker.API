@@ -1,0 +1,87 @@
+﻿@page
+@model AssetTracker.Web.Pages.Activos.BusquedaModel
+@{
+    ViewData["Title"] = "Búsqueda en Vivo";
+}
+
+<h1>Búsqueda en Vivo de Activos (AJAX)</h1>
+<p class="lead">Escribí en el cuadro de texto para buscar sin recargar la página.</p>
+
+<div class="mb-3">
+    <input type="text" id="txtBusqueda" class="form-control form-control-lg"
+           placeholder="Buscar por nombre, número de serie o licencia..." />
+</div>
+
+<table class="table table-striped table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Tipo</th>
+            <th>Estado</th>
+            <th>Valor</th>
+        </tr>
+    </thead>
+    <tbody id="tablaResultados">
+        <!-- Los resultados se inyectan aquí vía JavaScript -->
+        <tr>
+            <td colspan="5" class="text-center text-muted">Empezá a escribir para buscar...</td>
+        </tr>
+    </tbody>
+</table>
+
+@section Scripts {
+    <script>
+        const input = document.getElementById('txtBusqueda');
+        const tbody = document.getElementById('tablaResultados');
+        let timeoutId;
+
+        input.addEventListener('input', function () {
+            // Limpiamos el timeout anterior (efecto "Debounce")
+            clearTimeout(timeoutId);
+            const texto = this.value;
+
+            // Esperamos 300ms después de que el usuario deje de escribir para no saturar la API
+            timeoutId = setTimeout(async () => {
+                if (texto.length < 2) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Empezá a escribir para buscar...</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center">Buscando...</td></tr>';
+
+                try {
+                    // LLAMADA AJAX: fetch al handler OnGetBuscarAsync
+                    const response = await fetch(`?handler=Buscar&texto=${encodeURIComponent(texto)}`);
+
+                    if (!response.ok) throw new Error('Error en la red');
+
+                    const datos = await response.json();
+                    tbody.innerHTML = '';
+
+                    if (datos.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-warning">No se encontraron resultados.</td></tr>';
+                        return;
+                    }
+
+                    // Generamos las filas dinámicamente
+                    datos.forEach(activo => {
+                        const claseEstado = activo.estado === 'Disponible' ? 'bg-success' : 'bg-warning';
+                        const fila = `
+                                <tr>
+                                    <td>${activo.id}</td>
+                                    <td>${activo.nombre}</td>
+                                    <td>${activo.tipoActivo}</td>
+                                    <td><span class="badge ${claseEstado}">${activo.estado}</span></td>
+                                    <td>$ ${activo.valorOriginal.toLocaleString('es-AR')}</td>
+                                </tr>
+                            `;
+                        tbody.innerHTML += fila;
+                    });
+                } catch (error) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Error al conectar con el servidor.</td></tr>';
+                }
+            }, 300);
+        });
+    </script>
+}
