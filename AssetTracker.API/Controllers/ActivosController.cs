@@ -5,6 +5,7 @@ using AssetTracker.API.Repositories;
 using AssetTracker.API.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using AssetTracker.API.Factories;
 
 namespace AssetTracker.API.Controllers;
 
@@ -168,6 +169,11 @@ public class ActivosController : ControllerBase
             estadosUnicos
         });
     }
+    [HttpGet("estados")]
+    public ActionResult<string[]> GetEstadosActivos()
+    {
+        return Ok(EstadosActivo.Todos);
+    }
 
     // =====================================================================
     // POST /api/activos
@@ -177,29 +183,7 @@ public class ActivosController : ControllerBase
     {
         try
         {
-            string tipo = dto.TipoActivo?.ToLower() ?? string.Empty;
-
-            Activo nuevoActivo = tipo switch
-            {
-                "fisico" => new ActivoFisico
-                {
-                    Nombre = dto.Nombre,
-                    FechaAdquisicion = dto.FechaAdquisicion,
-                    ValorOriginal = dto.ValorOriginal,
-                    NumeroSerie = dto.NumeroSerie ?? string.Empty,
-                    Ubicacion = dto.Ubicacion ?? string.Empty
-                },
-                "digital" => new ActivoDigital
-                {
-                    Nombre = dto.Nombre,
-                    FechaAdquisicion = dto.FechaAdquisicion,
-                    ValorOriginal = dto.ValorOriginal,
-                    ClaveLicencia = dto.ClaveLicencia ?? string.Empty,
-                    FechaVencimientoLicencia = dto.FechaVencimientoLicencia ?? DateTime.MaxValue
-                },
-                _ => throw new ArgumentException("Tipo inválido. Use 'Fisico' o 'Digital'.")
-            };
-
+            Activo nuevoActivo = ActivoFactory.Crear(dto);
             nuevoActivo.Validar();
             await _repository.AgregarAsync(nuevoActivo);
             await _notificador.NotificarAsync($"Se ha registrado un nuevo activo: {nuevoActivo.Nombre}");
@@ -213,6 +197,7 @@ public class ActivosController : ControllerBase
             return BadRequest(new { error = ex.Message });
         }
     }
+
 
     // =====================================================================
     // PUT /api/activos/{id}
@@ -230,31 +215,17 @@ public class ActivosController : ControllerBase
         try
         {
             string tipoDto = dto.TipoActivo?.ToLower() ?? string.Empty;
-            bool esFisico = activo is ActivoFisico;
+            string tipoReal = ActivoFactory.TipoDe(activo);
 
-            if ((tipoDto == "fisico" && !esFisico) || (tipoDto == "digital" && esFisico))
+            if (!string.IsNullOrEmpty(tipoDto) && tipoDto != tipoReal)
             {
                 return BadRequest(new
                 {
-                    error = $"No se puede cambiar el tipo de activo. El activo existente es de tipo '{(esFisico ? "fisico" : "digital")}'."
+                    error = $"No se puede cambiar el tipo de activo. El activo existente es de tipo '{tipoReal}'."
                 });
             }
 
-            activo.Nombre = dto.Nombre;
-            activo.FechaAdquisicion = dto.FechaAdquisicion;
-            activo.ValorOriginal = dto.ValorOriginal;
-
-            if (activo is ActivoFisico fisico)
-            {
-                fisico.NumeroSerie = dto.NumeroSerie ?? string.Empty;
-                fisico.Ubicacion = dto.Ubicacion ?? string.Empty;
-            }
-            else if (activo is ActivoDigital digital)
-            {
-                digital.ClaveLicencia = dto.ClaveLicencia ?? string.Empty;
-                digital.FechaVencimientoLicencia = dto.FechaVencimientoLicencia ?? DateTime.MaxValue;
-            }
-
+            ActivoFactory.AplicarCambios(activo, dto);
             activo.Validar();
             await _repository.ActualizarAsync(activo);
             _logger.LogInformation("Activo {ActivoId} actualizado", id);

@@ -14,9 +14,8 @@ builder.Services.AddDbContext<AssetTrackerContext>(options =>
     options.UseSqlite(connectionString));
 
 // Interfaz de notificación
-builder.Services.AddScoped<INotificador, NotificadorConsola>();
+var proveedorNotificacion = builder.Configuration["Notificacion:Proveedor"] ?? "Consola";
 
-// Repositorios
 builder.Services.AddScoped<IActivoRepository, ActivoRepository>();
 builder.Services.AddScoped<IEmpleadoRepository, EmpleadoRepository>();
 builder.Services.AddScoped<IAsignacionRepository, AsignacionRepository>();
@@ -54,6 +53,9 @@ builder.Services.AddCors(options =>
             .AllowCredentials();
     });
 });
+builder.Services.AddSingleton<INotificador>(proveedorNotificacion.Equals("EmailSimulado", StringComparison.OrdinalIgnoreCase)
+    ? new NotificadorEmailSimulado()
+    : new NotificadorConsola());
 // ------------------------------------
 
 var app = builder.Build();
@@ -79,5 +81,5 @@ app.UseCors("AllowRazorPages");
 
 app.UseAuthorization();
 app.MapControllers();
-
+app.Logger.LogInformation("Notificador activo: {Proveedor}", proveedorNotificacion);
 app.Run();

@@ -1,18 +1,12 @@
 ﻿namespace AssetTracker.Web.Helpers;
 
 /// <summary>
-/// Catálogo visual de los 10 estados de un activo para la UI:
-/// centraliza el icono (Bootstrap Icons) y la clase CSS de color de cada estado.
+/// Mapeo visual de estados (icono y color) para la UI.
+/// La LISTA de estados ahora viene de la API (GET /api/activos/estados):
+/// single source of truth (13B).
 /// </summary>
 public static class EstadoActivoHelper
 {
-    public static readonly string[] Todos =
-    {
-        "Disponible", "Asignado", "En Mantenimiento", "En Reparación",
-        "En Tránsito", "En Préstamo", "Obsoleto", "Dado de Baja",
-        "Perdido", "Robado"
-    };
-
     public static string Icono(string? estado) => estado switch
     {
         "Disponible" => "bi-check-circle-fill",

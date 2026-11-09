@@ -1,5 +1,4 @@
-﻿using AssetTracker.Web.Helpers;
-using AssetTracker.Web.ViewModels;
+﻿using AssetTracker.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -30,7 +29,7 @@ public class IndexModel : PageModel
     public bool Descendente { get; set; }
 
     // Catálogo de estados para el select
-    public string[] Estados => EstadoActivoHelper.Todos;
+    public string[] Estados { get; set; } = Array.Empty<string>();
 
     public IndexModel(IHttpClientFactory factory) => _factory = factory;
 
@@ -39,6 +38,7 @@ public class IndexModel : PageModel
         var client = _factory.CreateClient("AssetTrackerApi");
         try
         {
+            Estados = await client.GetFromJsonAsync<string[]>("api/activos/estados") ?? Array.Empty<string>();
             string url;
 
             if (!string.IsNullOrWhiteSpace(FiltroTexto))

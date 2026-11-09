@@ -10,6 +10,7 @@ namespace AssetTracker.Web.Pages.Activos;
 public class DetailsModel : PageModel
 {
     private readonly IHttpClientFactory _factory;
+    public string[] Estados { get; set; } = Array.Empty<string>();
 
     public ActivoViewModel? Activo { get; set; }
     public string? Error { get; set; }
@@ -59,6 +60,7 @@ public class DetailsModel : PageModel
         var client = _factory.CreateClient("AssetTrackerApi");
         try
         {
+            Estados = await client.GetFromJsonAsync<string[]>("api/activos/estados") ?? Array.Empty<string>();
             Activo = await client.GetFromJsonAsync<ActivoViewModel>($"api/activos/{id}");
 
             // El GET por id devuelve la entidad sin discriminator:

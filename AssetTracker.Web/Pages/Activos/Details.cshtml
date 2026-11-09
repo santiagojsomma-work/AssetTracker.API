@@ -86,7 +86,7 @@ else
                             <label class="form-label">Nuevo estado</label>
                             <select name="NuevoEstado" class="form-select" required>
                                 <option value="">-- Seleccioná un estado --</option>
-                                @foreach (var estado in EstadoActivoHelper.Todos)
+                                @foreach (var estado in Model.Estados)
                                 {
                                     if (estado != "Disponible" && estado != "Asignado")
                                     {

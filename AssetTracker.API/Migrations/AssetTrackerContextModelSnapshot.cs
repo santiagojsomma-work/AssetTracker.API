@@ -109,7 +109,7 @@ namespace AssetTracker.API.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime>("FechaVencimientoLicencia")
+                    b.Property<DateTime?>("FechaVencimientoLicencia")
                         .HasColumnType("TEXT");
 
                     b.HasDiscriminator().HasValue("ActivoDigital");
