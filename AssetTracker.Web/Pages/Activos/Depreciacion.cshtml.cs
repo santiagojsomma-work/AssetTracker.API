@@ -2,6 +2,7 @@
 using AssetTracker.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Net.Http.Json;
 using System.Text.Json;
 
 namespace AssetTracker.Web.Pages.Activos;
@@ -12,12 +13,12 @@ public class DepreciacionModel : PageModel
     private readonly IHttpClientFactory _factory;
 
     public List<FilaDepreciacion> Filas { get; set; } = new();
+    public List<ReporteEstadoDto> ReportePorEstado { get; set; } = new();
     public decimal TotalValorOriginal { get; set; }
     public decimal TotalAcumulada { get; set; }
     public decimal TotalValorEnLibros { get; set; }
     public string? Error { get; set; }
 
-    // Datos serializados para el gráfico Chart.js
     public string EtiquetasJson => JsonSerializer.Serialize(Filas.Select(f => f.Codigo));
     public string ValoresLibrosJson => JsonSerializer.Serialize(Filas.Select(f => f.ValorEnLibros));
     public string AcumuladaJson => JsonSerializer.Serialize(Filas.Select(f => f.Acumulada));
@@ -29,14 +30,22 @@ public class DepreciacionModel : PageModel
         var client = _factory.CreateClient("AssetTrackerApi");
         try
         {
-            var response = await client.GetAsync("api/activos");
-            if (!response.IsSuccessStatusCode)
+            // 1. Cargar reporte por estado (4B)
+            var rReporte = await client.GetAsync("api/activos/reporte");
+            if (rReporte.IsSuccessStatusCode)
             {
-                Error = $"La API respondió {(int)response.StatusCode}";
+                ReportePorEstado = await rReporte.Content.ReadFromJsonAsync<List<ReporteEstadoDto>>() ?? new();
+            }
+
+            // 2. Cargar activos para depreciación
+            var rActivos = await client.GetAsync("api/activos");
+            if (!rActivos.IsSuccessStatusCode)
+            {
+                Error = $"La API respondió {(int)rActivos.StatusCode}";
                 return;
             }
 
-            var json = await response.Content.ReadAsStringAsync();
+            var json = await rActivos.Content.ReadAsStringAsync();
             using var doc = JsonDocument.Parse(json);
             var datos = doc.RootElement.GetProperty("datos").GetRawText();
 
@@ -86,5 +95,15 @@ public class DepreciacionModel : PageModel
         public decimal Acumulada { get; set; }
         public decimal ValorEnLibros { get; set; }
         public decimal Porcentaje { get; set; }
+    }
+
+    public class ReporteEstadoDto
+    {
+        public string Estado { get; set; } = string.Empty;
+        public int Cantidad { get; set; }
+        public decimal ValorTotal { get; set; }
+        public decimal ValorPromedio { get; set; }
+        public decimal ValorMaximo { get; set; }
+        public decimal ValorMinimo { get; set; }
     }
 }

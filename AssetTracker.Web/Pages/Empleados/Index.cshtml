@@ -4,35 +4,79 @@
     ViewData["Title"] = "Empleados";
 }
 
-<h1>Empleados</h1>
-<a asp-page="Create" class="btn btn-primary mb-3">Nuevo empleado</a>
+<div class="page-header">
+    <h1><i class="bi bi-people"></i> Empleados</h1>
+    <p class="lead">Administración de empleados y departamentos</p>
+</div>
 
-@if (Model.Error is not null)
-{
-    <div class="alert alert-danger">@Model.Error</div>
-}
-else if (Model.Empleados.Count == 0)
-{
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-list-ul"></i> Listado de empleados</h5>
+        <a asp-page="Create" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus-circle"></i> Nuevo empleado
+        </a>
+    </div>
 
-    <div class="alert alert-info">No hay empleados registrados.</div>
-}
-else
-{
-    <table class="table table-striped">
-        <thead><tr><th>ID</th><th>Nombre</th><th>Departamento</th><th>Acciones</th></tr></thead>
-        <tbody>
-            @foreach (var emp in Model.Empleados)
-            {
-                <tr>
-                    <td>@emp.Id</td>
-                    <td>@emp.NombreCompleto</td>
-                    <td>@emp.Departamento</td>
-                    <td>
-                        <a asp-page="Edit" asp-route-id="@emp.Id" class="btn btn-sm btn-primary">Editar</a>
-                        <a asp-page="Delete" asp-route-id="@emp.Id" class="btn btn-sm btn-danger">Eliminar</a>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
+    <div class="card-body p-0">
+        @if (Model.Error is not null)
+        {
+            <div class="alert alert-danger m-3">
+                <i class="bi bi-exclamation-triangle"></i> @Model.Error
+            </div>
+        }
+        else if (Model.Empleados.Count == 0)
+        {
+            <div class="text-center p-5">
+                <i class="bi bi-inbox text-muted" style="font-size: 4rem;"></i>
+                <h4 class="mt-3 text-muted-custom">No hay empleados registrados</h4>
+                <a asp-page="Create" class="btn btn-primary mt-2">
+                    <i class="bi bi-plus-circle"></i> Crear empleado
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre completo</th>
+                            <th>Departamento</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Empleados)
+                        {
+                            <tr>
+                                <td><strong>#@item.Id</strong></td>
+                                <td class="fw-bold">@item.NombreCompleto</td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">@item.Departamento</span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group" role="group">
+                                        @* 6B: botón Ver → ficha del empleado *@
+                                        <a asp-page="Details" asp-route-id="@item.Id"
+                                           class="btn btn-outline-info btn-sm" title="Ver ficha">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a asp-page="Edit" asp-route-id="@item.Id"
+                                           class="btn btn-outline-primary btn-sm" title="Editar">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a asp-page="Delete" asp-route-id="@item.Id"
+                                           class="btn btn-outline-danger btn-sm" title="Eliminar">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

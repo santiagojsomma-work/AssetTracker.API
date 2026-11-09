@@ -9,7 +9,7 @@
 @if (Model.Error is not null)
 {
     <div class="alert alert-danger">
-        @Model.Error
+        <i class="bi bi-exclamation-triangle"></i> @Model.Error
     </div>
 }
 
@@ -20,10 +20,22 @@
 }
 else
 {
-    <div class="alert alert-warning">
-        <h4>¿Confirma eliminar a "@Model.Empleado.NombreCompleto"?</h4>
-        <p>Esta acción eliminará también todas sus asignaciones asociadas.</p>
-    </div>
+    @if (Model.Empleado.TieneAsignaciones)
+    {
+        <div class="alert alert-warning">
+            <h5><i class="bi bi-exclamation-triangle"></i> Atención</h5>
+            <p class="mb-0">
+                Este empleado tiene <strong>asignaciones activas</strong> que se eliminarán en cascada.
+                Los activos asignados volverán a estar <strong>Disponibles</strong> automáticamente.
+            </p>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> Este empleado no tiene asignaciones activas.
+        </div>
+    }
 
     <div class="card mb-3">
         <div class="card-body">
@@ -41,7 +53,9 @@ else
     </div>
 
     <form method="post">
-        <button type="submit" class="btn btn-danger">Eliminar</button>
+        <button type="submit" class="btn btn-danger">
+            <i class="bi bi-trash"></i> Eliminar
+        </button>
         <a asp-page="Index" class="btn btn-secondary">Cancelar</a>
     </form>
 }

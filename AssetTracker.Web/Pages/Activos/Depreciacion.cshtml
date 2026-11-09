@@ -13,10 +13,6 @@
 {
     <div class="alert alert-danger"><i class="bi bi-exclamation-triangle"></i> @Model.Error</div>
 }
-else if (Model.Filas.Count == 0)
-{
-    <div class="alert alert-info">No hay activos para depreciar.</div>
-}
 else
 {
     <div class="row g-4 mb-4">
@@ -54,6 +50,43 @@ else
             </div>
         </div>
     </div>
+
+    @* ===== NUEVO: Reporte agrupado por estado (4B) ===== *@
+    @if (Model.ReportePorEstado.Count > 0)
+    {
+        <div class="card mb-4">
+            <div class="card-header"><i class="bi bi-bar-chart"></i> Resumen por estado</div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Estado</th>
+                                <th class="text-center">Cantidad</th>
+                                <th class="text-end">Valor total</th>
+                                <th class="text-end">Promedio</th>
+                                <th class="text-end">Máximo</th>
+                                <th class="text-end">Mínimo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var r in Model.ReportePorEstado)
+                            {
+                                <tr>
+                                    <td><strong>@r.Estado</strong></td>
+                                    <td class="text-center">@r.Cantidad</td>
+                                    <td class="text-end">@r.ValorTotal.ToString("C")</td>
+                                    <td class="text-end">@r.ValorPromedio.ToString("C")</td>
+                                    <td class="text-end">@r.ValorMaximo.ToString("C")</td>
+                                    <td class="text-end">@r.ValorMinimo.ToString("C")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
 
     <div class="row g-4">
         <div class="col-lg-7">

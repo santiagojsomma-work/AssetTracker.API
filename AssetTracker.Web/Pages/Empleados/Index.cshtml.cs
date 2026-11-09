@@ -9,6 +9,7 @@ namespace AssetTracker.Web.Pages.Empleados;
 public class IndexModel : PageModel
 {
     private readonly IHttpClientFactory _factory;
+
     public List<EmpleadoViewModel> Empleados { get; set; } = new();
     public string? Error { get; set; }
 
@@ -19,7 +20,14 @@ public class IndexModel : PageModel
         var client = _factory.CreateClient("AssetTrackerApi");
         try
         {
-            Empleados = await client.GetFromJsonAsync<List<EmpleadoViewModel>>("api/empleados") ?? new();
+            var response = await client.GetAsync("api/empleados");
+            if (!response.IsSuccessStatusCode)
+            {
+                Error = $"La API respondió {(int)response.StatusCode}";
+                return;
+            }
+
+            Empleados = await response.Content.ReadFromJsonAsync<List<EmpleadoViewModel>>() ?? new();
         }
         catch (HttpRequestException) { Error = "No se pudo conectar con la API."; }
     }
