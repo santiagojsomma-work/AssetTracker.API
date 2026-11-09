@@ -1,49 +1,15 @@
 ﻿using AssetTracker.Web.DTOs;
-using AssetTracker.Web.Pages.Empleados;
 using AssetTracker.Web.ViewModels;
 using System.Net.Http.Json;
 using System.Text.Json;
 
 namespace AssetTracker.Web.Services;
 
-/// <summary>Resultado de una llamada a la API sin usar excepciones como control de flujo.</summary>
-public record ResultadoApi(bool Ok, string? Error = null, int StatusCode = 0);
-
 /// <summary>
 /// Punto único de comunicación con AssetTracker.API (reutilización R2).
-/// Elimina el try/catch + deserialización duplicados en todos los PageModels.
+/// Centraliza el try/catch, la deserialización y el manejo de errores.
+/// Ningún PageModel toca IHttpClientFactory directamente.
 /// </summary>
-public interface IAssetTrackerApiClient
-{
-    // Catálogos y estadísticas
-    Task<(string[] Estados, string? Error)> ObtenerEstadosAsync();
-    Task<(EstadisticasViewModel? Estadisticas, string? Error)> ObtenerEstadisticasAsync();
-    Task<(List<ReporteEstadoViewModel>? Reporte, string? Error)> ObtenerReportePorEstadoAsync();
-
-    // Activos
-    Task<(List<ActivoViewModel>? Activos, decimal TotalValor, string? Error)> ObtenerActivosAsync(string? estado = null, string ordenarPor = "nombre", bool descendente = false);
-    Task<(List<ActivoViewModel>? Activos, string? Error)> BuscarActivosAsync(string texto);
-    Task<(ActivoViewModel? Activo, string? Error)> ObtenerActivoAsync(int id);
-    Task<ResultadoApi> CrearActivoAsync(CrearActivoDto dto);
-    Task<ResultadoApi> ActualizarActivoAsync(int id, CrearActivoDto dto);
-    Task<ResultadoApi> EliminarActivoAsync(int id);
-    Task<ResultadoApi> CambiarEstadoActivoAsync(int id, string estado);
-
-    // Empleados
-    Task<(List<EmpleadoViewModel>? Empleados, string? Error)> ObtenerEmpleadosAsync();
-    Task<(EmpleadoViewModel? Empleado, string? Error)> ObtenerEmpleadoAsync(int id);
-    Task<(EmpleadoDetalleViewModel? Detalle, string? Error)> ObtenerEmpleadoDetalleAsync(int id);
-    Task<(bool Tiene, string? Error)> EmpleadoTieneAsignacionesAsync(int id);
-    Task<ResultadoApi> CrearEmpleadoAsync(CrearEmpleadoDto dto);
-    Task<ResultadoApi> ActualizarEmpleadoAsync(int id, CrearEmpleadoDto dto);
-    Task<ResultadoApi> EliminarEmpleadoAsync(int id);
-
-    // Asignaciones
-    Task<(List<AsignacionViewModel>? Asignaciones, string? Error)> ObtenerAsignacionesAsync();
-    Task<ResultadoApi> CrearAsignacionAsync(CrearAsignacionDto dto);
-    Task<ResultadoApi> EliminarAsignacionAsync(int id);
-}
-
 public class AssetTrackerApiClient : IAssetTrackerApiClient
 {
     private readonly IHttpClientFactory _factory;
@@ -53,7 +19,9 @@ public class AssetTrackerApiClient : IAssetTrackerApiClient
 
     private HttpClient Create() => _factory.CreateClient("AssetTrackerApi");
 
-    // ===== Infraestructura privada: el ÚNICO lugar con try/catch y deserialización =====
+    // =====================================================
+    // Infraestructura privada: el ÚNICO lugar con try/catch
+    // =====================================================
 
     private async Task<(T? Datos, string? Error)> GetAsync<T>(string url)
     {
@@ -83,6 +51,10 @@ public class AssetTrackerApiClient : IAssetTrackerApiClient
         catch (HttpRequestException) { return new ResultadoApi(false, "No se pudo conectar con la API."); }
     }
 
+    // =====================================================
+    // Clases privadas para deserializar respuestas anidadas
+    // =====================================================
+
     private sealed class Envuelta<T>
     {
         public List<T> Datos { get; set; } = new();
@@ -94,7 +66,10 @@ public class AssetTrackerApiClient : IAssetTrackerApiClient
         public bool TieneAsignaciones { get; set; }
     }
 
-    // ===== Catálogos y estadísticas =====
+    // =====================================================
+    // Catálogos y estadísticas
+    // =====================================================
+
     public async Task<(string[] Estados, string? Error)> ObtenerEstadosAsync()
     {
         var (datos, error) = await GetAsync<string[]>("api/activos/estados");
@@ -107,7 +82,10 @@ public class AssetTrackerApiClient : IAssetTrackerApiClient
     public Task<(List<ReporteEstadoViewModel>? Reporte, string? Error)> ObtenerReportePorEstadoAsync()
         => GetAsync<List<ReporteEstadoViewModel>>("api/activos/reporte");
 
-    // ===== Activos =====
+    // =====================================================
+    // Activos
+    // =====================================================
+
     public async Task<(List<ActivoViewModel>? Activos, decimal TotalValor, string? Error)> ObtenerActivosAsync(
         string? estado = null, string ordenarPor = "nombre", bool descendente = false)
     {
@@ -132,37 +110,57 @@ public class AssetTrackerApiClient : IAssetTrackerApiClient
 
     public Task<ResultadoApi> CrearActivoAsync(CrearActivoDto dto)
         => SendAsync(HttpMethod.Post, "api/activos", dto);
+
     public Task<ResultadoApi> ActualizarActivoAsync(int id, CrearActivoDto dto)
         => SendAsync(HttpMethod.Put, $"api/activos/{id}", dto);
+
     public Task<ResultadoApi> EliminarActivoAsync(int id)
         => SendAsync(HttpMethod.Delete, $"api/activos/{id}");
+
     public Task<ResultadoApi> CambiarEstadoActivoAsync(int id, string estado)
         => SendAsync(HttpMethod.Put, $"api/activos/{id}/estado", new { Estado = estado });
 
-    // ===== Empleados =====
+    // =====================================================
+    // Empleados
+    // =====================================================
+
     public Task<(List<EmpleadoViewModel>? Empleados, string? Error)> ObtenerEmpleadosAsync()
         => GetAsync<List<EmpleadoViewModel>>("api/empleados");
+
     public Task<(EmpleadoViewModel? Empleado, string? Error)> ObtenerEmpleadoAsync(int id)
         => GetAsync<EmpleadoViewModel>($"api/empleados/{id}");
+
     public Task<(EmpleadoDetalleViewModel? Detalle, string? Error)> ObtenerEmpleadoDetalleAsync(int id)
         => GetAsync<EmpleadoDetalleViewModel>($"api/empleados/{id}/detalle");
+
     public async Task<(bool Tiene, string? Error)> EmpleadoTieneAsignacionesAsync(int id)
     {
         var (r, error) = await GetAsync<TieneAsignacionesRespuesta>($"api/empleados/{id}/tiene-asignaciones");
         return (r?.TieneAsignaciones ?? false, error);
     }
+
     public Task<ResultadoApi> CrearEmpleadoAsync(CrearEmpleadoDto dto)
         => SendAsync(HttpMethod.Post, "api/empleados", dto);
+
     public Task<ResultadoApi> ActualizarEmpleadoAsync(int id, CrearEmpleadoDto dto)
         => SendAsync(HttpMethod.Put, $"api/empleados/{id}", dto);
+
     public Task<ResultadoApi> EliminarEmpleadoAsync(int id)
         => SendAsync(HttpMethod.Delete, $"api/empleados/{id}");
 
-    // ===== Asignaciones =====
+    // =====================================================
+    // Asignaciones
+    // =====================================================
+
     public Task<(List<AsignacionViewModel>? Asignaciones, string? Error)> ObtenerAsignacionesAsync()
         => GetAsync<List<AsignacionViewModel>>("api/asignaciones");
+
+    public Task<(AsignacionViewModel? Asignacion, string? Error)> ObtenerAsignacionAsync(int id)
+        => GetAsync<AsignacionViewModel>($"api/asignaciones/{id}");
+
     public Task<ResultadoApi> CrearAsignacionAsync(CrearAsignacionDto dto)
         => SendAsync(HttpMethod.Post, "api/asignaciones", dto);
+
     public Task<ResultadoApi> EliminarAsignacionAsync(int id)
         => SendAsync(HttpMethod.Delete, $"api/asignaciones/{id}");
 }

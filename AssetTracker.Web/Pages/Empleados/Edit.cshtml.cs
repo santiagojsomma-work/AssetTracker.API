@@ -1,72 +1,43 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AssetTracker.Web.DTOs;
+using AssetTracker.Web.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.Net.Http.Json;
-using AssetTracker.Web.DTOs;
-using AssetTracker.Web.ViewModels;
 
 namespace AssetTracker.Web.Pages.Empleados;
 
+[Authorize]
 public class EditModel : PageModel
 {
-    private readonly IHttpClientFactory _factory;
+    private readonly IAssetTrackerApiClient _api;
 
-    [BindProperty]
-    public CrearEmpleadoDto Input { get; set; } = new();
+    [BindProperty] public CrearEmpleadoDto Input { get; set; } = new();
+    public string? Error { get; set; }
 
-    public EditModel(IHttpClientFactory factory) => _factory = factory;
+    public EditModel(IAssetTrackerApiClient api) => _api = api;
 
     public async Task<IActionResult> OnGetAsync(int id)
     {
-        var client = _factory.CreateClient("AssetTrackerApi");
+        var (emp, error) = await _api.ObtenerEmpleadoAsync(id);
+        if (error != null) { Error = error; return Page(); }
+        if (emp == null) return NotFound();
 
-        try
+        Input = new CrearEmpleadoDto
         {
-            var empleado = await client.GetFromJsonAsync<EmpleadoViewModel>($"api/empleados/{id}");
-
-            if (empleado == null)
-                return NotFound();
-
-            // Mapear el ViewModel al DTO de edición
-            Input = new CrearEmpleadoDto
-            {
-                NombreCompleto = empleado.NombreCompleto,
-                Departamento = empleado.Departamento
-            };
-
-            return Page();
-        }
-        catch (HttpRequestException)
-        {
-            ModelState.AddModelError("", "No se pudo conectar con la API.");
-            return Page();
-        }
+            NombreCompleto = emp.NombreCompleto,
+            Departamento = emp.Departamento
+        };
+        return Page();
     }
 
     public async Task<IActionResult> OnPostAsync(int id)
     {
-        if (!ModelState.IsValid)
-            return Page();
+        if (!ModelState.IsValid) return Page();
 
-        var client = _factory.CreateClient("AssetTrackerApi");
+        var resultado = await _api.ActualizarEmpleadoAsync(id, Input);
+        if (resultado.Ok) return RedirectToPage("Index");
 
-        try
-        {
-            var response = await client.PutAsJsonAsync($"api/empleados/{id}", Input);
-
-            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
-                return NotFound();
-
-            if (response.IsSuccessStatusCode)
-                return RedirectToPage("Index");
-
-            var detalle = await response.Content.ReadAsStringAsync();
-            ModelState.AddModelError("", $"La API respondió {(int)response.StatusCode}: {detalle}");
-        }
-        catch (HttpRequestException)
-        {
-            ModelState.AddModelError("", "No se pudo conectar con la API.");
-        }
-
+        Error = $"La API respondió {resultado.StatusCode}: {resultado.Error}";
         return Page();
     }
 }
