@@ -1,79 +1,37 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using AssetTracker.Web.Services;
+using AssetTracker.Web.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.Net.Http.Json;
-using AssetTracker.Web.ViewModels;
 
 namespace AssetTracker.Web.Pages.Activos;
 
-[Authorize(Roles = "Administrador")] 
+[Authorize(Roles = "Administrador")]
 public class DeleteModel : PageModel
 {
-    private readonly IHttpClientFactory _factory;
+    private readonly IAssetTrackerApiClient _api;
+
     public ActivoViewModel? Activo { get; set; }
     public string? Error { get; set; }
 
-    public DeleteModel(IHttpClientFactory factory) => _factory = factory;
+    public DeleteModel(IAssetTrackerApiClient api) => _api = api;
 
     public async Task<IActionResult> OnGetAsync(int id)
     {
-        var client = _factory.CreateClient("AssetTrackerApi");
-
-        try
-        {
-            var response = await client.GetAsync($"api/activos/{id}");
-
-            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
-                return NotFound();
-
-            if (!response.IsSuccessStatusCode)
-            {
-                Error = $"La API respondió {(int)response.StatusCode}";
-                return Page();
-            }
-
-            Activo = await response.Content.ReadFromJsonAsync<ActivoViewModel>();
-            return Page();
-        }
-        catch (HttpRequestException)
-        {
-            Error = "No se pudo conectar con la API.";
-            return Page();
-        }
+        var (act, error) = await _api.ObtenerActivoAsync(id);
+        if (error != null) { Error = error; return Page(); }
+        Activo = act;
+        return Activo == null ? NotFound() : Page();
     }
 
     public async Task<IActionResult> OnPostAsync(int id)
     {
-        var client = _factory.CreateClient("AssetTrackerApi");
+        var resultado = await _api.EliminarActivoAsync(id);
+        if (resultado.Ok) return RedirectToPage("Index");
 
-        try
-        {
-            var response = await client.DeleteAsync($"api/activos/{id}");
-
-            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
-                return NotFound();
-
-            if (response.IsSuccessStatusCode)
-                return RedirectToPage("Index");
-
-            var detalle = await response.Content.ReadAsStringAsync();
-            Error = $"La API respondió {(int)response.StatusCode}: {detalle}";
-        }
-        catch (HttpRequestException)
-        {
-            Error = "No se pudo conectar con la API.";
-        }
-
-        if (Activo == null)
-        {
-            try
-            {
-                Activo = await (await client.GetAsync($"api/activos/{id}")).Content
-                    .ReadFromJsonAsync<ActivoViewModel>();
-            }
-            catch { }
-        }
-
+        Error = $"La API respondió {resultado.StatusCode}: {resultado.Error}";
+        var (act, _) = await _api.ObtenerActivoAsync(id);
+        Activo = act;
         return Page();
     }
 }

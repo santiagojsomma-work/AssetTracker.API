@@ -2,6 +2,7 @@ using AssetTracker.Web;
 using AssetTracker.Web.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using AssetTracker.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,6 +30,8 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 // 3. Configuración de Razor Pages
 builder.Services.AddRazorPages();
+
+builder.Services.AddScoped<IAssetTrackerApiClient, AssetTrackerApiClient>();
 
 // 4. Configuración de HttpClient para consumir la API
 builder.Services.AddHttpClient("AssetTrackerApi", client =>

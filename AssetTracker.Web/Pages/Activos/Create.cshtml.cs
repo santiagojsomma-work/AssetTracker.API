@@ -1,18 +1,19 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AssetTracker.Web.DTOs;
+using AssetTracker.Web.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.Net.Http.Json;
-using AssetTracker.Web.DTOs;
 
 namespace AssetTracker.Web.Pages.Activos;
 
+[Authorize]
 public class CreateModel : PageModel
 {
-    private readonly IHttpClientFactory _factory;
+    private readonly IAssetTrackerApiClient _api;
 
-    [BindProperty]
-    public CrearActivoDto Input { get; set; } = new();
+    [BindProperty] public CrearActivoDto Input { get; set; } = new();
 
-    public CreateModel(IHttpClientFactory factory) => _factory = factory;
+    public CreateModel(IAssetTrackerApiClient api) => _api = api;
 
     public void OnGet()
     {
@@ -24,17 +25,10 @@ public class CreateModel : PageModel
     {
         if (!ModelState.IsValid) return Page();
 
-        var client = _factory.CreateClient("AssetTrackerApi");
-        try
-        {
-            var response = await client.PostAsJsonAsync("api/activos", Input);
-            if (response.IsSuccessStatusCode) return RedirectToPage("Index");
+        var resultado = await _api.CrearActivoAsync(Input);
+        if (resultado.Ok) return RedirectToPage("Index");
 
-            var detalle = await response.Content.ReadAsStringAsync();
-            ModelState.AddModelError("", $"La API respondió {(int)response.StatusCode}: {detalle}");
-        }
-        catch (HttpRequestException) { ModelState.AddModelError("", "No se pudo conectar con la API."); }
-
+        ModelState.AddModelError("", $"La API respondió {resultado.StatusCode}: {resultado.Error}");
         return Page();
     }
 }

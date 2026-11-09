@@ -1,81 +1,49 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AssetTracker.Web.DTOs;
+using AssetTracker.Web.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.Net.Http.Json;
-using AssetTracker.Web.DTOs;
-using AssetTracker.Web.ViewModels;
 
 namespace AssetTracker.Web.Pages.Activos;
 
+[Authorize]
 public class EditModel : PageModel
 {
-    private readonly IHttpClientFactory _factory;
+    private readonly IAssetTrackerApiClient _api;
 
-    [BindProperty]
-    public CrearActivoDto Input { get; set; } = new();
+    [BindProperty] public CrearActivoDto Input { get; set; } = new();
+    public string? Error { get; set; }
 
-    public EditModel(IHttpClientFactory factory)
-    {
-        _factory = factory;
-    }
+    public EditModel(IAssetTrackerApiClient api) => _api = api;
 
     public async Task<IActionResult> OnGetAsync(int id)
     {
-        var client = _factory.CreateClient("AssetTrackerApi");
+        var (act, error) = await _api.ObtenerActivoAsync(id);
+        if (error != null) { Error = error; return Page(); }
+        if (act == null) return NotFound();
 
-        try
+        Input = new CrearActivoDto
         {
-            var activo = await client.GetFromJsonAsync<ActivoViewModel>($"api/activos/{id}");
-
-            if (activo == null)
-                return NotFound();
-
-            // Mapear el ViewModel al DTO de edición
-            Input = new CrearActivoDto
-            {
-                Nombre = activo.Nombre,
-                FechaAdquisicion = activo.FechaAdquisicion,
-                ValorOriginal = activo.ValorOriginal,
-                TipoActivo = activo.Discriminator == "ActivoFisico" ? "Fisico" : "Digital",
-                NumeroSerie = activo.NumeroSerie,
-                Ubicacion = activo.Ubicacion,
-                ClaveLicencia = activo.ClaveLicencia,
-                FechaVencimientoLicencia = activo.FechaVencimientoLicencia
-            };
-
-            return Page();
-        }
-        catch (HttpRequestException)
-        {
-            ModelState.AddModelError("", "No se pudo conectar con la API.");
-            return Page();
-        }
+            Nombre = act.Nombre,
+            FechaAdquisicion = act.FechaAdquisicion,
+            ValorOriginal = act.ValorOriginal,
+            TipoActivo = act.TipoActivo == "Físico" ? "Fisico" : "Digital",
+            NumeroSerie = act.NumeroSerie,
+            Ubicacion = act.Ubicacion,
+            ClaveLicencia = act.ClaveLicencia,
+            FechaVencimientoLicencia = act.FechaVencimientoLicencia
+        };
+        return Page();
     }
 
     public async Task<IActionResult> OnPostAsync(int id)
     {
-        if (!ModelState.IsValid)
-            return Page();
+        if (!ModelState.IsValid) return Page();
 
-        var client = _factory.CreateClient("AssetTrackerApi");
+        var resultado = await _api.ActualizarActivoAsync(id, Input);
+        if (resultado.Ok) return RedirectToPage("Index");
 
-        try
-        {
-            var respuesta = await client.PutAsJsonAsync($"api/activos/{id}", Input);
-
-            if (respuesta.StatusCode == System.Net.HttpStatusCode.NotFound)
-                return NotFound();
-
-            if (respuesta.IsSuccessStatusCode)
-                return RedirectToPage("Index");
-
-            var detalle = await respuesta.Content.ReadAsStringAsync();
-            ModelState.AddModelError("", $"La API respondió {(int)respuesta.StatusCode}: {detalle}");
-        }
-        catch (HttpRequestException)
-        {
-            ModelState.AddModelError("", "No se pudo conectar con la API.");
-        }
-
+        Error = $"La API respondió {resultado.StatusCode}: {resultado.Error}";
         return Page();
     }
 }

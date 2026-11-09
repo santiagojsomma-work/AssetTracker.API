@@ -1,47 +1,32 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using AssetTracker.Web.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Text.Json;
 
 namespace AssetTracker.Web.Pages.Activos;
 
 [Authorize]
 public class BusquedaModel : PageModel
 {
-    private readonly IHttpClientFactory _factory;
+    private readonly IAssetTrackerApiClient _api;
 
-    public BusquedaModel(IHttpClientFactory factory) => _factory = factory;
+    public BusquedaModel(IAssetTrackerApiClient api) => _api = api;
 
     public void OnGet() { }
 
-    /// <summary>
-    /// Proxy de búsqueda en vivo (11B + fix CORS):
-    /// el navegador consulta ESTE handler (mismo origen) y el servidor
-    /// reenvía la consulta a la API. La URL del backend nunca se expone al cliente.
-    /// GET /Activos/Busqueda?handler=Buscar&texto=...
-    /// </summary>
+    /// <summary>Proxy same-origin de la búsqueda en vivo (evita CORS).</summary>
     public async Task<IActionResult> OnGetBuscarAsync([FromQuery] string texto = "")
     {
         if (string.IsNullOrWhiteSpace(texto))
-        {
             return new ContentResult { Content = "[]", ContentType = "application/json", StatusCode = 200 };
-        }
 
-        var client = _factory.CreateClient("AssetTrackerApi");
-        try
+        var (activos, _) = await _api.BuscarActivosAsync(texto);
+        return new ContentResult
         {
-            var response = await client.GetAsync($"api/activos/buscar?texto={Uri.EscapeDataString(texto)}");
-            if (!response.IsSuccessStatusCode)
-            {
-                return new ContentResult { Content = "[]", ContentType = "application/json", StatusCode = 200 };
-            }
-
-            // Passthrough: devolvemos el JSON de la API tal cual
-            var json = await response.Content.ReadAsStringAsync();
-            return new ContentResult { Content = json, ContentType = "application/json", StatusCode = 200 };
-        }
-        catch (HttpRequestException)
-        {
-            return new ContentResult { Content = "[]", ContentType = "application/json", StatusCode = 200 };
-        }
+            Content = JsonSerializer.Serialize(activos ?? new()),
+            ContentType = "application/json",
+            StatusCode = 200
+        };
     }
 }
