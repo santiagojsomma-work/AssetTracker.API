@@ -28,7 +28,7 @@ public class IndexModel : PageModel
     [BindProperty(SupportsGet = true)]
     public bool Descendente { get; set; }
 
-    // Catálogo de estados para el select
+    // 13B: el catálogo de estados viene de la API (single source of truth)
     public string[] Estados { get; set; } = Array.Empty<string>();
 
     public IndexModel(IHttpClientFactory factory) => _factory = factory;
@@ -38,7 +38,9 @@ public class IndexModel : PageModel
         var client = _factory.CreateClient("AssetTrackerApi");
         try
         {
+            // Catálogo para el select de estados
             Estados = await client.GetFromJsonAsync<string[]>("api/activos/estados") ?? Array.Empty<string>();
+
             string url;
 
             if (!string.IsNullOrWhiteSpace(FiltroTexto))

@@ -18,6 +18,10 @@
             <label class="form-label mb-1">Buscar</label>
             <input type="text" name="FiltroTexto" value="@Model.FiltroTexto"
                    class="form-control" placeholder="Nombre, código, serie o licencia…" />
+            @* 16B: diferenciación de buscadores *@
+            <div class="form-text">
+                <a asp-page="Busqueda">¿Búsqueda global en vivo?</a>
+            </div>
         </div>
         <div class="col-md-3">
             <label class="form-label mb-1">Estado</label>
@@ -100,39 +104,39 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var activo in Model.Activos)
+                        @foreach (var item in Model.Activos)
                         {
                             <tr>
-                                <td><code class="fw-bold">@activo.CodigoInterno</code></td>
+                                <td><code class="fw-bold">@item.CodigoInterno</code></td>
                                 <td>
                                     <div class="d-flex align-items-center gap-2">
-                                        <i class="bi @(activo.TipoActivo == "Físico" ? "bi-box" : "bi-laptop") text-primary" style="font-size: 1.2rem;"></i>
+                                        <i class="bi @(item.TipoActivo == "Físico" ? "bi-box" : "bi-laptop") text-primary" style="font-size: 1.2rem;"></i>
                                         <div>
-                                            <div class="fw-bold">@activo.Nombre</div>
-                                            <small class="text-muted-custom">@activo.TipoActivo</small>
+                                            <div class="fw-bold">@item.Nombre</div>
+                                            <small class="text-muted-custom">@item.TipoActivo</small>
                                         </div>
                                     </div>
                                 </td>
                                 <td>
-                                    <span class="badge-estado @EstadoActivoHelper.Badge(activo.Estado)">
-                                        <i class="bi @EstadoActivoHelper.Icono(activo.Estado)"></i>
-                                        @activo.Estado
+                                    <span class="badge-estado @EstadoActivoHelper.Badge(item.Estado)">
+                                        <i class="bi @EstadoActivoHelper.Icono(item.Estado)"></i>
+                                        @item.Estado
                                     </span>
                                 </td>
-                                <td class="text-end fw-bold">@activo.ValorOriginal.ToString("C")</td>
+                                <td class="text-end fw-bold">@item.ValorOriginal.ToString("C")</td>
                                 <td class="text-center">
                                     <div class="btn-group" role="group">
-                                        <a asp-page="Details" asp-route-id="@activo.Id"
+                                        <a asp-page="Details" asp-route-id="@item.Id"
                                            class="btn btn-outline-info btn-sm" title="Ver detalles">
                                             <i class="bi bi-eye"></i>
                                         </a>
-                                        <a asp-page="Edit" asp-route-id="@activo.Id"
+                                        <a asp-page="Edit" asp-route-id="@item.Id"
                                            class="btn btn-outline-primary btn-sm" title="Editar">
                                             <i class="bi bi-pencil"></i>
                                         </a>
                                         @if (esAdmin)
                                         {
-                                            <a asp-page="Delete" asp-route-id="@activo.Id"
+                                            <a asp-page="Delete" asp-route-id="@item.Id"
                                                class="btn btn-outline-danger btn-sm" title="Eliminar">
                                                 <i class="bi bi-trash"></i>
                                             </a>
