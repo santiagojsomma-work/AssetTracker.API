@@ -11,17 +11,13 @@
     <p class="lead">Gestión de activos físicos y digitales de la organización</p>
 </div>
 
-@* ===== Barra de filtros avanzados (formulario GET) ===== *@
 <form method="get" class="filtros-bar">
     <div class="row g-2 align-items-end">
         <div class="col-md-3">
             <label class="form-label mb-1">Buscar</label>
             <input type="text" name="FiltroTexto" value="@Model.FiltroTexto"
                    class="form-control" placeholder="Nombre, código, serie o licencia…" />
-            @* 16B: diferenciación de buscadores *@
-            <div class="form-text">
-                <a asp-page="Busqueda">¿Búsqueda global en vivo?</a>
-            </div>
+            <div class="form-text"><a asp-page="Busqueda">¿Búsqueda global en vivo?</a></div>
         </div>
         <div class="col-md-3">
             <label class="form-label mb-1">Estado</label>
@@ -75,6 +71,15 @@
         </div>
     </div>
 
+    @* ===== Barra de estadísticas del conjunto filtrado (paridad escritorio) ===== *@
+    <div class="stats-bar">
+        <span class="stat-item">Total: <strong>@Model.Total</strong></span>
+        <span class="stat-item stat-verde">Disponibles: <strong>@Model.Disponibles</strong></span>
+        <span class="stat-item stat-azul">Asignados: <strong>@Model.Asignados</strong></span>
+        <span class="stat-item stat-amarillo">En mantenimiento: <strong>@Model.EnMantenimiento</strong></span>
+        <span class="stat-item ms-auto">Valor total: <strong>@Model.TotalValor.ToString("C")</strong></span>
+    </div>
+
     <div class="card-body p-0">
         @if (Model.Error is not null)
         {
@@ -99,16 +104,19 @@
                             <th>Código</th>
                             <th>Nombre</th>
                             <th>Estado</th>
-                            <th class="text-end">Valor</th>
+                            <th class="text-end">Valor original</th>
+                            <th class="text-end">Depreciación</th>
+                            <th class="text-end">Valor actual</th>
                             <th class="text-center">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var item in Model.Activos)
                         {
+                            var dep = DepreciacionHelper.Calcular(item);
                             <tr>
                                 <td><code class="fw-bold">@item.CodigoInterno</code></td>
-                                <td>
+                                <td class="celda-wrap">
                                     <div class="d-flex align-items-center gap-2">
                                         <i class="bi @(item.TipoActivo == "Físico" ? "bi-box" : "bi-laptop") text-primary" style="font-size: 1.2rem;"></i>
                                         <div>
@@ -123,7 +131,9 @@
                                         @item.Estado
                                     </span>
                                 </td>
-                                <td class="text-end fw-bold">@item.ValorOriginal.ToString("C")</td>
+                                <td class="celda-monto">@item.ValorOriginal.ToString("C")</td>
+                                <td class="celda-monto text-muted-custom">-@dep.DepreciacionAcumulada.ToString("C")</td>
+                                <td class="celda-monto fw-bold" style="color:#059669;">@dep.ValorEnLibros.ToString("C")</td>
                                 <td class="text-center">
                                     <div class="btn-group" role="group">
                                         <a asp-page="Details" asp-route-id="@item.Id"
@@ -147,15 +157,6 @@
                         }
                     </tbody>
                 </table>
-            </div>
-
-            <div class="card-footer bg-white d-flex justify-content-between flex-wrap gap-2">
-                <small class="text-muted-custom">
-                    <i class="bi bi-info-circle"></i> @Model.Activos.Count activo(s)
-                </small>
-                <small class="text-muted-custom">
-                    Valor total filtrado: <strong>@Model.TotalValor.ToString("C")</strong>
-                </small>
             </div>
         }
     </div>

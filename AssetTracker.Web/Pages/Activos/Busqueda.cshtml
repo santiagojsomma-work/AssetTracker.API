@@ -13,11 +13,14 @@
     <div class="card-body">
         <input type="text" id="txtBuscar" class="form-control form-control-lg"
                placeholder="Escribí al menos 2 caracteres… (ej: ACT-0002, Samsung, XXXXX-)" />
-        <div class="d-flex justify-content-between mt-2">
-            <small class="text-muted-custom">La búsqueda se ejecuta automáticamente mientras escribís (debounce 300 ms).</small>
-            @* 16B: diferenciación de buscadores *@
+        <div class="d-flex justify-content-between flex-wrap gap-2 mt-2">
             <small class="text-muted-custom">
-                ¿Necesitás combinar texto con estado y orden? <a asp-page="Index">Usá el listado con filtros</a>.
+                <i class="bi bi-lightning-charge"></i>
+                La búsqueda se ejecuta automáticamente mientras escribís (debounce 300 ms).
+            </small>
+            <small class="text-muted-custom">
+                ¿Necesitás combinar texto con estado y orden?
+                <a asp-page="Index">Usá el listado con filtros</a>.
             </small>
         </div>
     </div>
@@ -45,19 +48,24 @@
 
 @section Scripts {
     <script>
-        // 11B: el comportamiento vive en site.js; la URL es de MISMO origen (proxy Razor)
+        // 11B: el comportamiento (debounce + fetch) vive en wwwroot/js/site.js.
+        // La URL es de MISMO origen: el handler OnGetBuscarAsync hace de proxy
+        // hacia la API (evita CORS y oculta la URL del backend al navegador).
         inicializarBusquedaEnVivo(
             'txtBuscar',
             'tbodyResultados',
             '/Activos/Busqueda?handler=Buscar&texto={texto}',
             (a) => `
                 <tr>
-                    <td><code>${a.codigoInterno ?? '—'}</code></td>
-                    <td class="fw-bold">${a.nombre}</td>
+                    <td><code class="fw-bold">${a.codigoInterno ?? '—'}</code></td>
+                    <td class="celda-wrap">
+                        <div class="fw-bold">${a.nombre}</div>
+                        <small class="text-muted-custom">${a.discriminator === 'ActivoFisico' ? 'Físico' : 'Digital'}</small>
+                    </td>
                     <td>${a.estado}</td>
-                    <td class="text-end">$${a.valorOriginal.toLocaleString('es-AR')}</td>
+                    <td class="celda-monto">$${a.valorOriginal.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     <td class="text-center">
-                        <a href="/Activos/Details/${a.id}" class="btn btn-outline-info btn-sm">
+                        <a href="/Activos/Details/${a.id}" class="btn btn-outline-info btn-sm" title="Ver detalles">
                             <i class="bi bi-eye"></i>
                         </a>
                     </td>

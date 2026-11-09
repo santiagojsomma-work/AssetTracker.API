@@ -33,6 +33,7 @@ function inicializarBusquedaEnVivo(inputId, tablaBodyId, urlTemplate, filaHtml, 
                     ? datos.map(a => filaHtml(a)).join('')
                     : `<tr><td colspan="5" class="text-center text-muted">Sin resultados para "${texto}"</td></tr>`;
             } catch (e) {
+                console.error('[busquedaEnVivo]', e);   // ← diagnóstico real en F12
                 tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">No se pudo conectar con el servicio de búsqueda.</td></tr>';
             }
         }, ms);

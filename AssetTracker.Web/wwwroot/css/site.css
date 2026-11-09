@@ -542,3 +542,103 @@ body {
     background: rgba(255, 255, 255, .92);
     border-color: rgba(255, 255, 255, .6);
 }
+/* =====================================================
+   TABLAS PROLIXAS: alineación de números y textos (V1)
+   ===================================================== */
+.table {
+    font-variant-numeric: tabular-nums; /* dígitos del mismo ancho: columnas alineadas */
+}
+
+    .table td, .table th {
+        white-space: nowrap; /* evita cortes feos tipo "Departame/nto" */
+        vertical-align: middle;
+    }
+
+    /* Celdas que SÍ pueden envolver (nombres y descripciones largas) */
+    .table .celda-wrap {
+        white-space: normal;
+        min-width: 200px;
+    }
+
+/* Montos siempre alineados a la derecha con decimales fijos */
+.celda-monto {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+/* =====================================================
+   FILAS COLOREADAS POR ESTADO (paridad con el escritorio)
+   ===================================================== */
+.fila-vencida {
+    background-color: rgba(239, 68, 68, .08);
+}
+
+    .fila-vencida:hover {
+        background-color: rgba(239, 68, 68, .15);
+    }
+
+.fila-completada {
+    background-color: rgba(16, 185, 129, .08);
+}
+
+    .fila-completada:hover {
+        background-color: rgba(16, 185, 129, .15);
+    }
+
+.fila-mantenimiento {
+    background-color: rgba(245, 158, 11, .08);
+}
+
+    .fila-mantenimiento:hover {
+        background-color: rgba(245, 158, 11, .15);
+    }
+
+/* =====================================================
+   BARRA DE ESTADÍSTICAS DE LISTADO (estilo escritorio)
+   ===================================================== */
+.stats-bar {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: .75rem 1.25rem;
+    background: var(--gray-100);
+    border-bottom: 1px solid var(--gray-200);
+    font-size: .9rem;
+}
+
+    .stats-bar .stat-item {
+        color: var(--secondary);
+    }
+
+        .stats-bar .stat-item strong {
+            color: var(--dark);
+            font-size: 1rem;
+        }
+
+    .stats-bar .stat-verde strong {
+        color: #059669;
+    }
+
+    .stats-bar .stat-azul strong {
+        color: #2563eb;
+    }
+
+    .stats-bar .stat-amarillo strong {
+        color: #d97706;
+    }
+
+    .stats-bar .stat-rojo strong {
+        color: #dc2626;
+    }
+
+/* =====================================================
+   FICHAS (dl) sin rótulos cortados
+   ===================================================== */
+.dl-detalle dt {
+    font-weight: 600;
+}
+
+.dl-detalle dd {
+    margin-bottom: .5rem;
+}

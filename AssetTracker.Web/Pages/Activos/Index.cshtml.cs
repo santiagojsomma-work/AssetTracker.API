@@ -16,6 +16,12 @@ public class IndexModel : PageModel
     public decimal TotalValor { get; set; }
     public string[] Estados { get; set; } = Array.Empty<string>();
 
+    // Estadísticas del conjunto actualmente filtrado (barra estilo escritorio)
+    public int Total => Activos.Count;
+    public int Disponibles => Activos.Count(a => a.Estado == "Disponible");
+    public int Asignados => Activos.Count(a => a.Estado == "Asignado");
+    public int EnMantenimiento => Activos.Count(a => a.Estado == "En Mantenimiento");
+
     [BindProperty(SupportsGet = true)] public string? FiltroEstado { get; set; }
     [BindProperty(SupportsGet = true)] public string? FiltroTexto { get; set; }
     [BindProperty(SupportsGet = true)] public string OrdenarPor { get; set; } = "nombre";
