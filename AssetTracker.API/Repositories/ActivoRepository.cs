@@ -21,15 +21,22 @@ public class ActivoRepository : IActivoRepository
         return await _context.Activos.ToListAsync();
     }
 
+    /// <summary>
+    /// Fuente consultable para filtros/orden/agregaciones (se traduce a SQL).
+    /// </summary>
+    public IQueryable<Activo> Consultar()
+    {
+        return _context.Activos.AsQueryable();
+    }
+
     public async Task<Activo?> ObtenerPorIdAsync(int id)
     {
         return await _context.Activos.FindAsync(id);
     }
 
     /// <summary>
-    /// Agrega un activo y le asigna el código interno autogenerado (ACT-0001).
-    /// Primer guardado: obtiene el Id de la base.
-    /// Segundo guardado: persiste el código derivado del Id (único y sin huecos visibles).
+    /// Doble guardado: el 1.º obtiene el Id de la base;
+    /// el 2.º persiste el código interno ACT-000X (Fase A).
     /// </summary>
     public async Task AgregarAsync(Activo activo)
     {
@@ -52,8 +59,12 @@ public class ActivoRepository : IActivoRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task<bool> TieneAsignacionesAsync(int activoId)
+    /// <summary>
+    /// Cantidad REAL de asignaciones del activo (0 = no tiene).
+    /// Reemplaza a TieneAsignacionesAsync (fix del magic number en el 409).
+    /// </summary>
+    public async Task<int> ContarAsignacionesAsync(int activoId)
     {
-        return await _context.Asignaciones.AnyAsync(a => a.ActivoId == activoId);
+        return await _context.Asignaciones.CountAsync(a => a.ActivoId == activoId);
     }
 }

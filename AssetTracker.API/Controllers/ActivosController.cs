@@ -1,5 +1,4 @@
-﻿using AssetTracker.API.Data;
-using AssetTracker.API.Dto;
+﻿using AssetTracker.API.Dto;
 using AssetTracker.API.Exceptions;
 using AssetTracker.API.Models;
 using AssetTracker.API.Repositories;
@@ -14,25 +13,23 @@ namespace AssetTracker.API.Controllers;
 public class ActivosController : ControllerBase
 {
     private readonly IActivoRepository _repository;
-    private readonly AssetTrackerContext _context;
     private readonly INotificador _notificador;
     private readonly ILogger<ActivosController> _logger;
 
     public ActivosController(
         IActivoRepository repository,
-        AssetTrackerContext context,
         INotificador notificador,
         ILogger<ActivosController> logger)
     {
         _repository = repository;
-        _context = context;
         _notificador = notificador;
         _logger = logger;
     }
 
     // =====================================================================
     // GET /api/activos
-    // Listado con filtros, ordenamiento y agregación
+    // Sin filtro de estado: usa ObtenerTodosAsync (camino simple).
+    // Con filtro: construye la consulta SQL vía Consultar().
     // =====================================================================
     [HttpGet]
     public async Task<ActionResult<object>> GetActivos(
@@ -42,18 +39,10 @@ public class ActivosController : ControllerBase
     {
         _logger.LogInformation("Consultando activos con filtro {Estado}", estado ?? "todos");
 
-        IQueryable<Activo> query = _context.Activos;
+        IQueryable<Activo> query = string.IsNullOrWhiteSpace(estado)
+            ? (await _repository.ObtenerTodosAsync()).AsQueryable()
+            : _repository.Consultar().Where(a => a.Estado == estado);
 
-        // Where: filtra por estado si el cliente envía el parámetro
-        if (!string.IsNullOrWhiteSpace(estado))
-        {
-            query = query.Where(a => a.Estado == estado);
-        }
-
-        // Sum: agregación sobre el conjunto filtrado
-        decimal totalValor = await query.SumAsync(a => (decimal?)a.ValorOriginal) ?? 0m;
-
-        // OrderBy / OrderByDescending según parámetro
         string criterio = ordenarPor?.ToLower() ?? "nombre";
         query = criterio switch
         {
@@ -68,19 +57,9 @@ public class ActivosController : ControllerBase
                 : query.OrderBy(a => a.Nombre)
         };
 
-        // Select + ToListAsync: proyección a DTO y ejecución
-        var activos = await query
-            .Select(a => new ActivoResumenDto
-            {
-                Id = a.Id,
-                CodigoInterno = a.CodigoInterno,                                       // FASE A
-                Nombre = a.Nombre,
-                FechaAdquisicion = a.FechaAdquisicion,
-                ValorOriginal = a.ValorOriginal,
-                Estado = a.Estado,
-                Discriminator = a is ActivoFisico ? "ActivoFisico" : "ActivoDigital"   // FASE C
-            })
-            .ToListAsync();
+        // Proyección reutilizada (R1)
+        var activos = query.Select(Proyecciones.Resumen).ToList();
+        decimal totalValor = activos.Sum(a => a.ValorOriginal);
 
         return Ok(new { datos = activos, totalValor });
     }
@@ -101,9 +80,8 @@ public class ActivosController : ControllerBase
     }
 
     // =====================================================================
-    // GET /api/activos/buscar?texto=dell
-    // Búsqueda con EF.Functions.Like (LINQ + SQL LIKE)
-    // Incluye nombre, código interno, número de serie y clave de licencia
+    // GET /api/activos/buscar?texto=...
+    // Búsqueda por nombre, código, serie o licencia (EF.Functions.Like)
     // =====================================================================
     [HttpGet("buscar")]
     public async Task<ActionResult<List<ActivoResumenDto>>> BuscarActivos(
@@ -116,92 +94,28 @@ public class ActivosController : ControllerBase
 
         _logger.LogInformation("Buscando activos con texto: {Texto}", texto);
 
-        // EF.Functions.Like traduce a SQL LIKE
-        var activos = await _context.Activos
+        var activos = await _repository.Consultar()
             .Where(a => EF.Functions.Like(a.Nombre, $"%{texto}%") ||
-                        EF.Functions.Like(a.CodigoInterno, $"%{texto}%") ||              // FASE A
+                        EF.Functions.Like(a.CodigoInterno, $"%{texto}%") ||
                         (a is ActivoFisico && EF.Functions.Like(((ActivoFisico)a).NumeroSerie, $"%{texto}%")) ||
                         (a is ActivoDigital && EF.Functions.Like(((ActivoDigital)a).ClaveLicencia, $"%{texto}%")))
             .OrderBy(a => a.Nombre)
-            .Select(a => new ActivoResumenDto
-            {
-                Id = a.Id,
-                CodigoInterno = a.CodigoInterno,                                       // FASE A
-                Nombre = a.Nombre,
-                FechaAdquisicion = a.FechaAdquisicion,
-                ValorOriginal = a.ValorOriginal,
-                Estado = a.Estado,
-                Discriminator = a is ActivoFisico ? "ActivoFisico" : "ActivoDigital"   // FASE C
-            })
+            .Select(Proyecciones.Resumen)
             .ToListAsync();
 
         return Ok(activos);
     }
 
     // =====================================================================
-    // GET /api/activos/paginado?pagina=1&tamanio=10
-    // Paginación con Skip y Take
-    // =====================================================================
-    [HttpGet("paginado")]
-    public async Task<ActionResult<object>> GetActivosPaginados(
-        [FromQuery] int pagina = 1,
-        [FromQuery] int tamanio = 10)
-    {
-        if (pagina < 1) pagina = 1;
-        if (tamanio < 1 || tamanio > 100) tamanio = 10;
-
-        _logger.LogInformation("Consultando activos paginados: página {Pagina}, tamaño {Tamanio}", pagina, tamanio);
-
-        // Count: total de registros
-        int totalRegistros = await _context.Activos.CountAsync();
-
-        // Skip: cuántos registros saltar
-        int saltar = (pagina - 1) * tamanio;
-
-        // Skip + Take: paginación
-        var activos = await _context.Activos
-            .OrderBy(a => a.Id)
-            .Skip(saltar)
-            .Take(tamanio)
-            .Select(a => new ActivoResumenDto
-            {
-                Id = a.Id,
-                CodigoInterno = a.CodigoInterno,                                       // FASE A
-                Nombre = a.Nombre,
-                FechaAdquisicion = a.FechaAdquisicion,
-                ValorOriginal = a.ValorOriginal,
-                Estado = a.Estado,
-                Discriminator = a is ActivoFisico ? "ActivoFisico" : "ActivoDigital"   // FASE C
-            })
-            .ToListAsync();
-
-        int totalPaginas = (int)Math.Ceiling((double)totalRegistros / tamanio);
-
-        return Ok(new
-        {
-            datos = activos,
-            paginacion = new
-            {
-                paginaActual = pagina,
-                tamanioPagina = tamanio,
-                totalRegistros,
-                totalPaginas,
-                tienePaginaSiguiente = pagina < totalPaginas,
-                tienePaginaAnterior = pagina > 1
-            }
-        });
-    }
-
-    // =====================================================================
     // GET /api/activos/reporte
-    // Reporte agrupado por estado usando GroupBy
+    // GroupBy por estado
     // =====================================================================
     [HttpGet("reporte")]
     public async Task<ActionResult<List<ReporteActivoDto>>> GetReporteActivos()
     {
         _logger.LogInformation("Generando reporte de activos agrupados por estado");
 
-        var reporte = await _context.Activos
+        var reporte = await _repository.Consultar()
             .GroupBy(a => a.Estado)
             .Select(g => new ReporteActivoDto
             {
@@ -220,23 +134,25 @@ public class ActivosController : ControllerBase
 
     // =====================================================================
     // GET /api/activos/estadisticas
-    // Estadísticas generales con Count, Sum, Max, Min, Average, Any, Distinct
+    // Agregaciones SQL: Count, Sum, Max, Min, Average, Any, Distinct
     // =====================================================================
     [HttpGet("estadisticas")]
     public async Task<ActionResult<object>> GetEstadisticasActivos()
     {
         _logger.LogInformation("Calculando estadísticas generales de activos");
 
-        int totalActivos = await _context.Activos.CountAsync();
-        decimal valorTotal = await _context.Activos.SumAsync(a => (decimal?)a.ValorOriginal) ?? 0m;
-        decimal valorPromedio = await _context.Activos.AverageAsync(a => (decimal?)a.ValorOriginal) ?? 0m;
-        decimal valorMaximo = await _context.Activos.MaxAsync(a => (decimal?)a.ValorOriginal) ?? 0m;
-        decimal valorMinimo = await _context.Activos.MinAsync(a => (decimal?)a.ValorOriginal) ?? 0m;
-        bool hayActivosDisponibles = await _context.Activos.AnyAsync(a => a.Estado == "Disponible");
-        bool hayActivosAsignados = await _context.Activos.AnyAsync(a => a.Estado == "Asignado");
-        int activosDisponibles = await _context.Activos.CountAsync(a => a.Estado == "Disponible");
-        int activosAsignados = await _context.Activos.CountAsync(a => a.Estado == "Asignado");
-        int estadosUnicos = await _context.Activos.Select(a => a.Estado).Distinct().CountAsync();
+        var query = _repository.Consultar();
+
+        int totalActivos = await query.CountAsync();
+        decimal valorTotal = await query.SumAsync(a => (decimal?)a.ValorOriginal) ?? 0m;
+        decimal valorPromedio = await query.AverageAsync(a => (decimal?)a.ValorOriginal) ?? 0m;
+        decimal valorMaximo = await query.MaxAsync(a => (decimal?)a.ValorOriginal) ?? 0m;
+        decimal valorMinimo = await query.MinAsync(a => (decimal?)a.ValorOriginal) ?? 0m;
+        bool hayActivosDisponibles = await query.AnyAsync(a => a.Estado == EstadosActivo.Disponible);
+        bool hayActivosAsignados = await query.AnyAsync(a => a.Estado == EstadosActivo.Asignado);
+        int activosDisponibles = await query.CountAsync(a => a.Estado == EstadosActivo.Disponible);
+        int activosAsignados = await query.CountAsync(a => a.Estado == EstadosActivo.Asignado);
+        int estadosUnicos = await query.Select(a => a.Estado).Distinct().CountAsync();
 
         return Ok(new
         {
@@ -255,7 +171,6 @@ public class ActivosController : ControllerBase
 
     // =====================================================================
     // POST /api/activos
-    // Crear un activo (físico o digital). El código interno lo genera el repositorio.
     // =====================================================================
     [HttpPost]
     public async Task<ActionResult<Activo>> PostActivo(CrearActivoDto dto)
@@ -301,7 +216,6 @@ public class ActivosController : ControllerBase
 
     // =====================================================================
     // PUT /api/activos/{id}
-    // Actualizar un activo existente (no permite cambiar el tipo)
     // =====================================================================
     [HttpPut("{id}")]
     public async Task<IActionResult> PutActivo(int id, CrearActivoDto dto)
@@ -316,18 +230,13 @@ public class ActivosController : ControllerBase
         try
         {
             string tipoDto = dto.TipoActivo?.ToLower() ?? string.Empty;
-            string tipoReal = activo switch
-            {
-                ActivoFisico => "fisico",
-                ActivoDigital => "digital",
-                _ => string.Empty
-            };
+            bool esFisico = activo is ActivoFisico;
 
-            if (!string.IsNullOrEmpty(tipoDto) && tipoDto != tipoReal)
+            if ((tipoDto == "fisico" && !esFisico) || (tipoDto == "digital" && esFisico))
             {
                 return BadRequest(new
                 {
-                    error = $"No se puede cambiar el tipo de activo. El activo existente es de tipo '{tipoReal}'."
+                    error = $"No se puede cambiar el tipo de activo. El activo existente es de tipo '{(esFisico ? "fisico" : "digital")}'."
                 });
             }
 
@@ -361,8 +270,7 @@ public class ActivosController : ControllerBase
 
     // =====================================================================
     // PUT /api/activos/{id}/estado
-    // FASE C: cambio manual de estado con regla de negocio:
-    // "Disponible" y "Asignado" los gestiona SOLO el módulo de Asignaciones.
+    // Regla de negocio: Disponible/Asignado solo los gestiona Asignaciones.
     // =====================================================================
     [HttpPut("{id}/estado")]
     public async Task<IActionResult> PutEstado(int id, CambiarEstadoDto dto)
@@ -398,7 +306,7 @@ public class ActivosController : ControllerBase
 
     // =====================================================================
     // DELETE /api/activos/{id}
-    // Eliminar un activo. Devuelve 409 si tiene asignaciones asociadas.
+    // 409 con la cantidad REAL de asignaciones (fix S7).
     // =====================================================================
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteActivo(int id)
@@ -409,10 +317,10 @@ public class ActivosController : ControllerBase
 
         try
         {
-            bool tieneAsignaciones = await _repository.TieneAsignacionesAsync(id);
-            if (tieneAsignaciones)
+            int cantidadAsignaciones = await _repository.ContarAsignacionesAsync(id);
+            if (cantidadAsignaciones > 0)
             {
-                throw new ActivoConDependenciasException(id, 1);
+                throw new ActivoConDependenciasException(id, cantidadAsignaciones);
             }
 
             await _repository.EliminarAsync(activo);
