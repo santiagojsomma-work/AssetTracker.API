@@ -2,16 +2,17 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using AssetTracker.Web.Data;
 
 namespace AssetTracker.Web.Pages.Account;
 
 public class LoginModel : PageModel
 {
-    private readonly SignInManager<IdentityUser> _signInManager;
+    private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly ILogger<LoginModel> _logger;
 
     public LoginModel(
-        SignInManager<IdentityUser> signInManager,
+        SignInManager<ApplicationUser> signInManager,
         ILogger<LoginModel> logger)
     {
         _signInManager = signInManager;

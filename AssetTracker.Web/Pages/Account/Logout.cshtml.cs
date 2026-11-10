@@ -1,16 +1,17 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using AssetTracker.Web.Data;
 
 namespace AssetTracker.Web.Pages.Account;
 
 public class LogoutModel : PageModel
 {
-    private readonly SignInManager<IdentityUser> _signInManager;
+    private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly ILogger<LogoutModel> _logger;
 
     public LogoutModel(
-        SignInManager<IdentityUser> signInManager,
+        SignInManager<ApplicationUser> signInManager,
         ILogger<LogoutModel> logger)
     {
         _signInManager = signInManager;
@@ -31,6 +32,7 @@ public class LogoutModel : PageModel
             return LocalRedirect(returnUrl);
         }
 
-        return RedirectToPage("~/Index");
+        // ✅ CORRECCIÓN: "/Index" en lugar de "~/Index"
+        return RedirectToPage("/Index");
     }
 }

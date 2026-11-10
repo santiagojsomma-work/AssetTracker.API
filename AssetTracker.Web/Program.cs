@@ -1,66 +1,62 @@
-using AssetTracker.Web;
 using AssetTracker.Web.Data;
+using AssetTracker.Web.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using AssetTracker.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Configuración de la base de datos para Identity
+// ====== EF Core: base de Identity (usuarios/roles) ======
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? "Data Source=assettracker-web.db";
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlite(connectionString));
 
-// 2. Configuración de Identity
-builder.Services.AddDefaultIdentity<IdentityUser>(options =>
+// ====== Identity con ApplicationUser y roles (R1) ======
+builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 {
     options.SignIn.RequireConfirmedAccount = false;
-    options.User.RequireUniqueEmail = true;
-    options.Lockout.MaxFailedAccessAttempts = 5;
+    options.Password.RequireDigit = true;
+    options.Password.RequiredLength = 6;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireUppercase = true;
+    options.Password.RequireLowercase = true;
 })
-.AddRoles<IdentityRole>()
-.AddEntityFrameworkStores<ApplicationDbContext>();
+    .AddRoles<IdentityRole>()
+    .AddEntityFrameworkStores<ApplicationDbContext>();
 
-// ★ NUEVO: Redirigir a NUESTRAS páginas de login/logout en vez de las de Identity UI
-builder.Services.ConfigureApplicationCookie(options =>
-{
-    options.LoginPath = "/Account/Login";
-    options.LogoutPath = "/Account/Logout";
-    options.AccessDeniedPath = "/Account/AccessDenied";
-});
-
-// 3. Configuración de Razor Pages
+// ====== Razor Pages + autorización ======
 builder.Services.AddRazorPages();
+builder.Services.AddAuthorization();
 
-builder.Services.AddScoped<IAssetTrackerApiClient, AssetTrackerApiClient>();
-
-// 4. Configuración de HttpClient para consumir la API
+// ====== HttpClient nombrado hacia la API ======
 builder.Services.AddHttpClient("AssetTrackerApi", client =>
 {
-    client.BaseAddress = new Uri("https://localhost:7087/");
-    client.Timeout = TimeSpan.FromSeconds(10);
+    client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"] ?? "https://localhost:7087/");
 });
+
+// ====== Cliente centralizado (Tanda 5) ======
+builder.Services.AddScoped<IAssetTrackerApiClient, AssetTrackerApiClient>();
 
 var app = builder.Build();
 
-// 5. Crear roles al iniciar (solo en desarrollo)
+// ====== Seed de roles y usuarios al arrancar en Desarrollo ======
 if (app.Environment.IsDevelopment())
 {
-    await IdentitySeed.CrearRolesAsync(app.Services);
+    using var scope = app.Services.CreateScope();
+    await IdentitySeed.SeedAsync(scope.ServiceProvider);
 }
 
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
+    app.UseHsts();
 }
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
-
-// 6. Middleware de autenticación y autorización (ORDEN IMPORTANTE)
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapRazorPages();
 
 app.Run();

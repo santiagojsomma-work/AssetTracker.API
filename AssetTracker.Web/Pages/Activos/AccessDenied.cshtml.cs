@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace AssetTracker.Web.Pages.Activos
@@ -10,3 +10,4 @@ namespace AssetTracker.Web.Pages.Activos
         }
     }
 }
+
