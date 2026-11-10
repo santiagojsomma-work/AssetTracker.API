@@ -163,4 +163,26 @@ public class AssetTrackerApiClient : IAssetTrackerApiClient
 
     public Task<ResultadoApi> EliminarAsignacionAsync(int id)
         => SendAsync(HttpMethod.Delete, $"api/asignaciones/{id}");
+
+    // ===== Mantenimientos =====
+    public Task<(List<MantenimientoViewModel>? Mantenimientos, string? Error)> ObtenerMantenimientosAsync(string? estado = null, string? tipo = null)
+    {
+        var url = "api/mantenimientos";
+        var queryParams = new List<string>();
+        if (!string.IsNullOrWhiteSpace(estado)) queryParams.Add($"estado={Uri.EscapeDataString(estado)}");
+        if (!string.IsNullOrWhiteSpace(tipo)) queryParams.Add($"tipo={Uri.EscapeDataString(tipo)}");
+
+        if (queryParams.Count > 0) url += "?" + string.Join("&", queryParams);
+
+        return GetAsync<List<MantenimientoViewModel>>(url);
+    }
+
+    public Task<ResultadoApi> CrearMantenimientoAsync(CrearMantenimientoDto dto)
+        => SendAsync(HttpMethod.Post, "api/mantenimientos", dto);
+
+    public Task<ResultadoApi> CambiarEstadoMantenimientoAsync(int id, string estado)
+        => SendAsync(HttpMethod.Put, $"api/mantenimientos/{id}/estado", new { Estado = estado });
+
+    public Task<ResultadoApi> EliminarMantenimientoAsync(int id)
+        => SendAsync(HttpMethod.Delete, $"api/mantenimientos/{id}");
 }

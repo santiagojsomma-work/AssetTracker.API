@@ -12,10 +12,15 @@ public class CreateModel : PageModel
     private readonly IAssetTrackerApiClient _api;
 
     [BindProperty] public CrearEmpleadoDto Input { get; set; } = new();
+    public string? Error { get; set; }
 
     public CreateModel(IAssetTrackerApiClient api) => _api = api;
 
-    public void OnGet() { }
+    public void OnGet()
+    {
+        Input.Activo = true;
+        Input.FechaIngreso = DateTime.Today;
+    }
 
     public async Task<IActionResult> OnPostAsync()
     {
@@ -24,7 +29,7 @@ public class CreateModel : PageModel
         var resultado = await _api.CrearEmpleadoAsync(Input);
         if (resultado.Ok) return RedirectToPage("Index");
 
-        ModelState.AddModelError("", $"La API respondió {resultado.StatusCode}: {resultado.Error}");
+        Error = $"La API respondió {resultado.StatusCode}: {resultado.Error}";
         return Page();
     }
 }

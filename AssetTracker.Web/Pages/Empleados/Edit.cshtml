@@ -4,7 +4,7 @@
     ViewData["Title"] = "Editar empleado";
 }
 
-<h1>Editar empleado</h1>
+<h1><i class="bi bi-person-gear"></i> Editar empleado</h1>
 
 <form method="post">
     <div asp-validation-summary="All" class="text-danger mb-3"></div>
@@ -21,7 +21,7 @@
         <span asp-validation-for="Input.Departamento" class="text-danger"></span>
     </div>
 
-    <button type="submit" class="btn btn-primary">Actualizar</button>
+    <button type="submit" class="btn btn-primary"><i class="bi bi-check2-circle"></i> Actualizar</button>
     <a asp-page="Index" class="btn btn-secondary">Cancelar</a>
 </form>
 

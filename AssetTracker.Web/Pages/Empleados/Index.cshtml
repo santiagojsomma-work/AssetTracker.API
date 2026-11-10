@@ -2,6 +2,7 @@
 @model AssetTracker.Web.Pages.Empleados.IndexModel
 @{
     ViewData["Title"] = "Empleados";
+    var esAdmin = User.IsInRole("Administrador");
 }
 
 <div class="page-header">
@@ -9,29 +10,59 @@
     <p class="lead">Administración de empleados y departamentos</p>
 </div>
 
+<form method="get" class="filtros-bar">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label mb-1">Departamento</label>
+            <select name="FiltroDepartamento" class="form-select">
+                <option value="">Todos</option>
+                @foreach (var d in Model.Departamentos)
+                {
+                    <option value="@d" selected="@(Model.FiltroDepartamento == d)">@d</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label mb-1">Estado</label>
+            <select name="FiltroEstado" class="form-select">
+                <option value="">Todos</option>
+                <option value="activo" selected="@(Model.FiltroEstado == "activo")">Activos</option>
+                <option value="inactivo" selected="@(Model.FiltroEstado == "inactivo")">Inactivos</option>
+            </select>
+        </div>
+        <div class="col-md-2 d-flex gap-2">
+            <button type="submit" class="btn btn-primary flex-fill">
+                <i class="bi bi-funnel"></i> Filtrar
+            </button>
+            <a asp-page="Index" class="btn btn-outline-secondary" title="Limpiar">
+                <i class="bi bi-x-circle"></i>
+            </a>
+        </div>
+        <div class="col-md-4 text-end">
+            <a asp-page="Create" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> Nuevo empleado
+            </a>
+        </div>
+    </div>
+</form>
+
 <div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0"><i class="bi bi-list-ul"></i> Listado de empleados</h5>
-        <a asp-page="Create" class="btn btn-primary btn-sm">
-            <i class="bi bi-plus-circle"></i> Nuevo empleado
-        </a>
+    <div class="stats-bar">
+        <span class="stat-item">Total: <strong>@Model.Total</strong></span>
+        <span class="stat-item stat-verde">Activos: <strong>@Model.Activos</strong></span>
+        <span class="stat-item stat-rojo">Inactivos: <strong>@Model.Inactivos</strong></span>
     </div>
 
     <div class="card-body p-0">
         @if (Model.Error is not null)
         {
-            <div class="alert alert-danger m-3">
-                <i class="bi bi-exclamation-triangle"></i> @Model.Error
-            </div>
+            <div class="alert alert-danger m-3"><i class="bi bi-exclamation-triangle"></i> @Model.Error</div>
         }
         else if (Model.Empleados.Count == 0)
         {
             <div class="text-center p-5">
                 <i class="bi bi-inbox text-muted" style="font-size: 4rem;"></i>
-                <h4 class="mt-3 text-muted-custom">No hay empleados registrados</h4>
-                <a asp-page="Create" class="btn btn-primary mt-2">
-                    <i class="bi bi-plus-circle"></i> Crear empleado
-                </a>
+                <h4 class="mt-3 text-muted-custom">No se encontraron empleados</h4>
             </div>
         }
         else
@@ -40,36 +71,62 @@
                 <table class="table table-hover mb-0">
                     <thead>
                         <tr>
-                            <th>ID</th>
+                            <th>Documento</th>
                             <th>Nombre completo</th>
+                            <th>Cargo</th>
                             <th>Departamento</th>
+                            <th>Correo</th>
+                            <th>Teléfono</th>
+                            <th>Ingreso</th>
+                            <th class="text-center">Estado</th>
                             <th class="text-center">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var item in Model.Empleados)
                         {
-                            <tr>
-                                <td><strong>#@item.Id</strong></td>
-                                <td class="fw-bold">@item.NombreCompleto</td>
+                            <tr class="@(item.Activo ? "" : "fila-vencida")">
+                                <td><code>@(item.Documento ?? "—")</code></td>
+                                <td class="celda-wrap fw-bold">@item.NombreCompleto</td>
+                                <td>@(item.Cargo ?? "—")</td>
+                                <td><span class="badge bg-light text-dark border">@item.Departamento</span></td>
                                 <td>
-                                    <span class="badge bg-light text-dark border">@item.Departamento</span>
+                                    @if (!string.IsNullOrWhiteSpace(item.Correo))
+                                    {
+                                        <a href="mailto:@item.Correo" class="text-decoration-none">@item.Correo</a>
+                                    }
+                                    else
+                                    {
+
+                                        <span class="text-muted-custom">—</span>
+                                    }
+                                </td>
+                                <td>@(item.Telefono ?? "—")</td>
+                                <td>@(item.FechaIngreso?.ToString("dd/MM/yyyy") ?? "—")</td>
+                                <td class="text-center">
+                                    @if (item.Activo)
+                                    {
+                                        <span class="badge-estado estado-disponible"><i class="bi bi-check-circle-fill"></i> Activo</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge-estado estado-baja"><i class="bi bi-slash-circle-fill"></i> Inactivo</span>
+                                    }
                                 </td>
                                 <td class="text-center">
                                     <div class="btn-group" role="group">
-                                        @* 6B: botón Ver → ficha del empleado *@
-                                        <a asp-page="Details" asp-route-id="@item.Id"
-                                           class="btn btn-outline-info btn-sm" title="Ver ficha">
+                                        <a asp-page="Details" asp-route-id="@item.Id" class="btn btn-outline-info btn-sm" title="Ver ficha">
                                             <i class="bi bi-eye"></i>
                                         </a>
-                                        <a asp-page="Edit" asp-route-id="@item.Id"
-                                           class="btn btn-outline-primary btn-sm" title="Editar">
+                                        <a asp-page="Edit" asp-route-id="@item.Id" class="btn btn-outline-primary btn-sm" title="Editar">
                                             <i class="bi bi-pencil"></i>
                                         </a>
-                                        <a asp-page="Delete" asp-route-id="@item.Id"
-                                           class="btn btn-outline-danger btn-sm" title="Eliminar">
-                                            <i class="bi bi-trash"></i>
-                                        </a>
+                                        @if (esAdmin)
+                                        {
+                                            <a asp-page="Delete" asp-route-id="@item.Id" class="btn btn-outline-danger btn-sm" title="Eliminar">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
+                                        }
                                     </div>
                                 </td>
                             </tr>

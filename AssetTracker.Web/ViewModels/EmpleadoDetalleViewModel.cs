@@ -1,11 +1,16 @@
 ﻿namespace AssetTracker.Web.ViewModels;
 
-/// <summary>Contrato de GET /api/empleados/{id}/detalle</summary>
 public class EmpleadoDetalleViewModel
 {
     public int Id { get; set; }
     public string NombreCompleto { get; set; } = string.Empty;
     public string Departamento { get; set; } = string.Empty;
+    public string? Documento { get; set; }
+    public string? Correo { get; set; }
+    public string? Telefono { get; set; }
+    public string? Cargo { get; set; }
+    public DateTime? FechaIngreso { get; set; }
+    public bool Activo { get; set; }
     public int TotalAsignaciones { get; set; }
     public List<AsignacionDetalleViewModel> Asignaciones { get; set; } = new();
 }

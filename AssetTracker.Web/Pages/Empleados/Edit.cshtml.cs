@@ -25,7 +25,13 @@ public class EditModel : PageModel
         Input = new CrearEmpleadoDto
         {
             NombreCompleto = emp.NombreCompleto,
-            Departamento = emp.Departamento
+            Departamento = emp.Departamento,
+            Documento = emp.Documento,
+            Correo = emp.Correo,
+            Telefono = emp.Telefono,
+            Cargo = emp.Cargo,
+            FechaIngreso = emp.FechaIngreso,
+            Activo = emp.Activo
         };
         return Page();
     }

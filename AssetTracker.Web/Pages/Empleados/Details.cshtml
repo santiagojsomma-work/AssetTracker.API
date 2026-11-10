@@ -1,63 +1,92 @@
 ﻿@page "{id:int}"
 @model AssetTracker.Web.Pages.Empleados.DetailsModel
 @{
-    ViewData["Title"] = "Detalle de empleado";
+    ViewData["Title"] = "Ficha del empleado";
 }
 
 @if (Model.Error is not null)
 {
-    <div class="alert alert-danger">
-        <i class="bi bi-exclamation-triangle"></i> @Model.Error
-    </div>
-    <a asp-page="Index" class="btn btn-secondary">Volver al listado</a>
+    <div class="alert alert-danger"><i class="bi bi-exclamation-triangle"></i> @Model.Error</div>
+    <a asp-page="Index" class="btn btn-secondary">Volver</a>
 }
 else if (Model.Empleado == null)
 {
     <div class="alert alert-warning">No se encontró el empleado.</div>
-    <a asp-page="Index" class="btn btn-secondary">Volver al listado</a>
+    <a asp-page="Index" class="btn btn-secondary">Volver</a>
 }
 else
 {
+    var e = Model.Empleado;
     <div class="page-header">
-        <h1><i class="bi bi-person"></i> @Model.Empleado.NombreCompleto</h1>
-        <p class="lead">@Model.Empleado.Departamento</p>
+        <h1>
+            <i class="bi bi-person"></i> @e.NombreCompleto
+            @if (e.Activo)
+            {
+                <span class="badge-estado estado-disponible ms-2"><i class="bi bi-check-circle-fill"></i> Activo</span>
+            }
+            else
+            {
+                <span class="badge-estado estado-baja ms-2"><i class="bi bi-slash-circle-fill"></i> Inactivo</span>
+            }
+        </h1>
+        <p class="lead mb-0">@e.Cargo — @e.Departamento</p>
     </div>
 
     <div class="row g-4">
-        <div class="col-lg-4">
+        <div class="col-lg-5">
             <div class="card">
                 <div class="card-header"><i class="bi bi-info-circle"></i> Información</div>
                 <div class="card-body">
                     <dl class="row mb-0 dl-detalle">
-                        <dt class="col-sm-4">ID</dt>
-                        <dd class="col-sm-8">#@Model.Empleado.Id</dd>
+                        <dt class="col-sm-5">Documento</dt>
+                        <dd class="col-sm-7"><code>@(e.Documento ?? "—")</code></dd>
 
-                        <dt class="col-sm-4">Nombre</dt>
-                        <dd class="col-sm-8">@Model.Empleado.NombreCompleto</dd>
+                        <dt class="col-sm-5">Correo</dt>
+                        <dd class="col-sm-7">
+                            @if (!string.IsNullOrWhiteSpace(e.Correo))
+                            {
+                                <a href="mailto:@e.Correo">@e.Correo</a>
+                            }
+                            else
+                            {
 
-                        <dt class="col-sm-4">Departamento</dt>
-                        <dd class="col-sm-8">@Model.Empleado.Departamento</dd>
+                                <span class="text-muted-custom">—</span>
+                            }
+                        </dd>
 
-                        <dt class="col-sm-4">Asignaciones</dt>
-                        <dd class="col-sm-8"><strong>@Model.Empleado.TotalAsignaciones</strong></dd>
+                        <dt class="col-sm-5">Teléfono</dt>
+                        <dd class="col-sm-7">@(e.Telefono ?? "—")</dd>
+
+                        <dt class="col-sm-5">Cargo</dt>
+                        <dd class="col-sm-7">@(e.Cargo ?? "—")</dd>
+
+                        <dt class="col-sm-5">Departamento</dt>
+                        <dd class="col-sm-7">@e.Departamento</dd>
+
+                        <dt class="col-sm-5">Fecha de ingreso</dt>
+                        <dd class="col-sm-7">@(e.FechaIngreso?.ToString("dd/MM/yyyy") ?? "—")</dd>
+
+                        <dt class="col-sm-5">Asignaciones</dt>
+                        <dd class="col-sm-7"><strong>@e.TotalAsignaciones</strong></dd>
                     </dl>
                 </div>
             </div>
 
-            <div class="mt-3">
-                <a asp-page="Edit" asp-route-id="@Model.Empleado.Id" class="btn btn-primary w-100">
+            <div class="mt-3 d-flex gap-2">
+                <a asp-page="Edit" asp-route-id="@e.Id" class="btn btn-primary flex-fill">
                     <i class="bi bi-pencil"></i> Editar
+                </a>
+                <a asp-page="Index" class="btn btn-outline-secondary flex-fill">
+                    <i class="bi bi-arrow-left"></i> Volver
                 </a>
             </div>
         </div>
 
-        <div class="col-lg-8">
+        <div class="col-lg-7">
             <div class="card">
-                <div class="card-header">
-                    <i class="bi bi-box-seam"></i> Activos asignados
-                </div>
+                <div class="card-header"><i class="bi bi-box-seam"></i> Activos asignados</div>
                 <div class="card-body p-0">
-                    @if (Model.Empleado.Asignaciones.Count == 0)
+                    @if (e.Asignaciones.Count == 0)
                     {
                         <div class="text-center p-4">
                             <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
@@ -73,20 +102,16 @@ else
                                         <th>Activo</th>
                                         <th>Estado</th>
                                         <th class="text-end">Valor</th>
-                                        <th>Fecha asignación</th>
+                                        <th>Fecha</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach (var a in Model.Empleado.Asignaciones)
+                                    @foreach (var a in e.Asignaciones)
                                     {
                                         <tr>
-                                            <td><strong>@a.ActivoNombre</strong></td>
-                                            <td>
-                                                <span class="badge @(a.ActivoEstado == "Asignado" ? "bg-warning" : "bg-secondary")">
-                                                    @a.ActivoEstado
-                                                </span>
-                                            </td>
-                                            <td class="text-end">@a.ActivoValor.ToString("C")</td>
+                                            <td class="fw-bold">@a.ActivoNombre</td>
+                                            <td><span class="badge @(a.ActivoEstado == "Asignado" ? "bg-warning" : "bg-secondary")">@a.ActivoEstado</span></td>
+                                            <td class="celda-monto">@a.ActivoValor.ToString("C")</td>
                                             <td>@a.FechaAsignacion.ToString("dd/MM/yyyy")</td>
                                         </tr>
                                     }
@@ -97,11 +122,5 @@ else
                 </div>
             </div>
         </div>
-    </div>
-
-    <div class="mt-3">
-        <a asp-page="Index" class="btn btn-secondary">
-            <i class="bi bi-arrow-left"></i> Volver al listado
-        </a>
     </div>
 }

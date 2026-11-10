@@ -13,6 +13,9 @@ public class AssetTrackerContext : DbContext
     public DbSet<Empleado> Empleados { get; set; }
     public DbSet<Asignacion> Asignaciones { get; set; }
 
+    // ✅ NUEVO: Registro de la entidad Mantenimiento
+    public DbSet<Mantenimiento> Mantenimientos { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Asignacion>()
@@ -27,10 +30,11 @@ public class AssetTrackerContext : DbContext
             .HasForeignKey(a => a.EmpleadoId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // NUEVO: código interno único (índice filtrado para permitir NULL transitorio)
-        modelBuilder.Entity<Activo>()
-            .HasIndex(a => a.CodigoInterno)
-            .IsUnique()
-            .HasFilter("CodigoInterno IS NOT NULL");
+        // ✅ NUEVO: Relación Activo -> Mantenimiento
+        modelBuilder.Entity<Mantenimiento>()
+            .HasOne(m => m.Activo)
+            .WithMany() // Un activo puede tener múltiples mantenimientos
+            .HasForeignKey(m => m.ActivoId)
+            .OnDelete(DeleteBehavior.Restrict); // Protege el historial si se intenta borrar el activo
     }
 }

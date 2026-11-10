@@ -25,68 +25,41 @@ public class EmpleadosController : ControllerBase
         _logger = logger;
     }
 
-    /// <summary>
-    /// GET /api/empleados
-    /// Lista todos los empleados.
-    /// </summary>
     [HttpGet]
     public async Task<ActionResult<List<Empleado>>> GetEmpleados()
     {
-        _logger.LogInformation("Consultando todos los empleados");
-
-        var empleados = await _repository.ObtenerTodosAsync();
-        return Ok(empleados);
+        return Ok(await _repository.ObtenerTodosAsync());
     }
 
-    /// <summary>
-    /// GET /api/empleados/1
-    /// Obtiene un empleado por su ID.
-    /// </summary>
     [HttpGet("{id}")]
     public async Task<ActionResult<Empleado>> GetEmpleado(int id)
     {
         var empleado = await _repository.ObtenerPorIdAsync(id);
-
-        if (empleado == null)
-        {
-            _logger.LogWarning("Empleado {EmpleadoId} no encontrado", id);
-            return NotFound();
-        }
-
+        if (empleado == null) return NotFound();
         return Ok(empleado);
     }
 
-    /// <summary>
-    /// GET /api/empleados/1/detalle
-    /// Obtiene un empleado con sus asignaciones y los activos asociados.
-    /// Usa Include y ThenInclude para cargar las relaciones en una sola consulta SQL.
-    /// </summary>
     [HttpGet("{id}/detalle")]
     public async Task<ActionResult<EmpleadoDetalleDto>> GetEmpleadoDetalle(int id)
     {
-        _logger.LogInformation("Consultando detalle del empleado {EmpleadoId}", id);
-
-        // Include carga las asignaciones del empleado.
-        // ThenInclude carga el activo asociado a cada asignación.
-        // Esto se traduce a un SQL con JOINs, evitando el problema N+1.
         var empleado = await _context.Empleados
             .Include(e => e.Asignaciones)
                 .ThenInclude(a => a.Activo)
             .FirstOrDefaultAsync(e => e.Id == id);
 
-        if (empleado == null)
-        {
-            _logger.LogWarning("Empleado {EmpleadoId} no encontrado para detalle", id);
-            return NotFound();
-        }
+        if (empleado == null) return NotFound();
 
-        // Proyectamos a DTO para evitar ciclos de serialización
-        // y exponer solo los datos necesarios.
-        var dto = new EmpleadoDetalleDto
+        return Ok(new EmpleadoDetalleDto
         {
             Id = empleado.Id,
             NombreCompleto = empleado.NombreCompleto,
             Departamento = empleado.Departamento,
+            Documento = empleado.Documento,
+            Correo = empleado.Correo,
+            Telefono = empleado.Telefono,
+            Cargo = empleado.Cargo,
+            FechaIngreso = empleado.FechaIngreso,
+            Activo = empleado.Activo,
             TotalAsignaciones = empleado.Asignaciones.Count,
             Asignaciones = empleado.Asignaciones
                 .OrderByDescending(a => a.FechaAsignacion)
@@ -97,106 +70,80 @@ public class EmpleadosController : ControllerBase
                     ActivoNombre = a.Activo.Nombre,
                     ActivoEstado = a.Activo.Estado,
                     ActivoValor = a.Activo.ValorOriginal
-                })
-                .ToList()
-        };
-
-        return Ok(dto);
+                }).ToList()
+        });
     }
 
-    /// <summary>
-    /// GET /api/empleados/1/tiene-asignaciones
-    /// Verifica si un empleado tiene asignaciones activas usando Any.
-    /// </summary>
     [HttpGet("{id}/tiene-asignaciones")]
     public async Task<ActionResult<object>> EmpleadoTieneAsignaciones(int id)
     {
         var empleado = await _repository.ObtenerPorIdAsync(id);
+        if (empleado == null) return NotFound();
 
-        if (empleado == null)
-        {
-            _logger.LogWarning("Empleado {EmpleadoId} no encontrado", id);
-            return NotFound();
-        }
-
-        // Any genera un SQL EXISTS, más eficiente que Count > 0
-        // porque se detiene en el primer registro encontrado.
-        bool tieneAsignaciones = await _context.Asignaciones
-            .AnyAsync(a => a.EmpleadoId == id);
-
-        return Ok(new
-        {
-            empleadoId = id,
-            nombreCompleto = empleado.NombreCompleto,
-            tieneAsignaciones
-        });
+        bool tiene = await _context.Asignaciones.AnyAsync(a => a.EmpleadoId == id);
+        return Ok(new { empleadoId = id, nombreCompleto = empleado.NombreCompleto, tieneAsignaciones = tiene });
     }
 
-    /// <summary>
-    /// POST /api/empleados
-    /// Crea un nuevo empleado.
-    /// </summary>
     [HttpPost]
     public async Task<ActionResult<Empleado>> PostEmpleado(CrearEmpleadoDto dto)
     {
-        var empleado = new Empleado
+        try
         {
-            NombreCompleto = dto.NombreCompleto,
-            Departamento = dto.Departamento
-        };
-
-        await _repository.AgregarAsync(empleado);
-
-        _logger.LogInformation("Empleado {EmpleadoId} creado", empleado.Id);
-
-        return CreatedAtAction(nameof(GetEmpleado), new { id = empleado.Id }, empleado);
+            var empleado = new Empleado
+            {
+                NombreCompleto = dto.NombreCompleto,
+                Departamento = dto.Departamento,
+                Documento = dto.Documento,
+                Correo = dto.Correo,
+                Telefono = dto.Telefono,
+                Cargo = dto.Cargo,
+                FechaIngreso = dto.FechaIngreso,
+                Activo = dto.Activo
+            };
+            empleado.Validar();
+            await _repository.AgregarAsync(empleado);
+            _logger.LogInformation("Empleado {Id} creado", empleado.Id);
+            return CreatedAtAction(nameof(GetEmpleado), new { id = empleado.Id }, empleado);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
     }
 
-    /// <summary>
-    /// PUT /api/empleados/1
-    /// Actualiza un empleado existente.
-    /// </summary>
     [HttpPut("{id}")]
     public async Task<IActionResult> PutEmpleado(int id, CrearEmpleadoDto dto)
     {
         var empleado = await _repository.ObtenerPorIdAsync(id);
+        if (empleado == null) return NotFound();
 
-        if (empleado == null)
+        try
         {
-            _logger.LogWarning("Intento de actualizar empleado inexistente {EmpleadoId}", id);
-            return NotFound();
+            empleado.NombreCompleto = dto.NombreCompleto;
+            empleado.Departamento = dto.Departamento;
+            empleado.Documento = dto.Documento;
+            empleado.Correo = dto.Correo;
+            empleado.Telefono = dto.Telefono;
+            empleado.Cargo = dto.Cargo;
+            empleado.FechaIngreso = dto.FechaIngreso;
+            empleado.Activo = dto.Activo;
+            empleado.Validar();
+            await _repository.ActualizarAsync(empleado);
+            return NoContent();
         }
-
-        empleado.NombreCompleto = dto.NombreCompleto;
-        empleado.Departamento = dto.Departamento;
-
-        await _repository.ActualizarAsync(empleado);
-
-        _logger.LogInformation("Empleado {EmpleadoId} actualizado", id);
-
-        return NoContent();
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
     }
 
-    /// <summary>
-    /// DELETE /api/empleados/1
-    /// Elimina un empleado. Por configuración en el DbContext,
-    /// sus asignaciones se eliminan en cascada.
-    /// </summary>
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteEmpleado(int id)
     {
         var empleado = await _repository.ObtenerPorIdAsync(id);
-
-        if (empleado == null)
-        {
-            _logger.LogWarning("Intento de eliminar empleado inexistente {EmpleadoId}", id);
-            return NotFound();
-        }
+        if (empleado == null) return NotFound();
 
         await _repository.EliminarAsync(empleado);
-
-        _logger.LogInformation("Empleado {EmpleadoId} eliminado", id);
-
         return NoContent();
     }
 }

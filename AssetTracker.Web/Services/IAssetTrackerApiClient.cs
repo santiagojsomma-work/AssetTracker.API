@@ -43,4 +43,10 @@ public interface IAssetTrackerApiClient
     Task<(AsignacionViewModel? Asignacion, string? Error)> ObtenerAsignacionAsync(int id);
     Task<ResultadoApi> CrearAsignacionAsync(CrearAsignacionDto dto);
     Task<ResultadoApi> EliminarAsignacionAsync(int id);
+
+    // ===== Mantenimientos =====
+    Task<(List<MantenimientoViewModel>? Mantenimientos, string? Error)> ObtenerMantenimientosAsync(string? estado = null, string? tipo = null);
+    Task<ResultadoApi> CrearMantenimientoAsync(CrearMantenimientoDto dto);
+    Task<ResultadoApi> CambiarEstadoMantenimientoAsync(int id, string estado);
+    Task<ResultadoApi> EliminarMantenimientoAsync(int id);
 }

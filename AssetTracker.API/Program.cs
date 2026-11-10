@@ -19,6 +19,7 @@ var proveedorNotificacion = builder.Configuration["Notificacion:Proveedor"] ?? "
 builder.Services.AddScoped<IActivoRepository, ActivoRepository>();
 builder.Services.AddScoped<IEmpleadoRepository, EmpleadoRepository>();
 builder.Services.AddScoped<IAsignacionRepository, AsignacionRepository>();
+builder.Services.AddScoped<IMantenimientoRepository, MantenimientoRepository>();
 
 // Controladores + Swagger + Configuración para evitar ciclos en JSON
 builder.Services.AddControllers()

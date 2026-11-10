@@ -47,10 +47,6 @@ namespace AssetTracker.API.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CodigoInterno")
-                        .IsUnique()
-                        .HasFilter("CodigoInterno IS NOT NULL");
-
                     b.ToTable("Activos");
 
                     b.HasDiscriminator<string>("Discriminator").HasValue("Activo");
@@ -88,17 +84,78 @@ namespace AssetTracker.API.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("Activo")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Cargo")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Correo")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Departamento")
                         .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Documento")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("FechaIngreso")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("NombreCompleto")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Telefono")
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
 
                     b.ToTable("Empleados");
+                });
+
+            modelBuilder.Entity("AssetTracker.API.Models.Mantenimiento", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ActivoId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("CodigoInterno")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Costo")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Descripcion")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("FechaProgramada")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("FechaRealizacion")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Proveedor")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActivoId");
+
+                    b.ToTable("Mantenimientos");
                 });
 
             modelBuilder.Entity("AssetTracker.API.Models.ActivoDigital", b =>
@@ -147,6 +204,17 @@ namespace AssetTracker.API.Migrations
                     b.Navigation("Activo");
 
                     b.Navigation("Empleado");
+                });
+
+            modelBuilder.Entity("AssetTracker.API.Models.Mantenimiento", b =>
+                {
+                    b.HasOne("AssetTracker.API.Models.Activo", "Activo")
+                        .WithMany()
+                        .HasForeignKey("ActivoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Activo");
                 });
 
             modelBuilder.Entity("AssetTracker.API.Models.Empleado", b =>
