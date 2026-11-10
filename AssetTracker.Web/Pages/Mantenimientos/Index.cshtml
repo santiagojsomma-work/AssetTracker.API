@@ -1,7 +1,9 @@
 ﻿@page
+@using AssetTracker.Web.Helpers
 @model AssetTracker.Web.Pages.Mantenimientos.IndexModel
 @{
     ViewData["Title"] = "Mantenimientos";
+    var gestionaInventario = Permisos.GestionaInventario(User);
 }
 
 <div class="page-header">
@@ -39,9 +41,12 @@
             </a>
         </div>
         <div class="col-md-4 text-end">
-            <a asp-page="Create" class="btn btn-success">
-                <i class="bi bi-plus-circle"></i> Nuevo Mantenimiento
-            </a>
+            @if (gestionaInventario)
+            {
+                <a asp-page="Create" class="btn btn-success">
+                    <i class="bi bi-plus-circle"></i> Nuevo Mantenimiento
+                </a>
+            }
         </div>
     </div>
 </form>
@@ -85,7 +90,6 @@
                     <tbody>
                         @foreach (var item in Model.Mantenimientos)
                         {
-                            // Clases de fila del Lote V1
                             string filaClass = item.EstadoReal switch
                             {
                                 "Vencido" => "fila-vencida",
@@ -116,26 +120,34 @@
                                     </span>
                                 </td>
                                 <td class="text-center">
-                                    <div class="btn-group" role="group">
-                                        @if (item.EstadoReal is "Pendiente" or "En Progreso" or "Vencido")
-                                        {
-                                            <form method="post" asp-page-handler="Completar" asp-route-id="@item.Id" class="d-inline">
-                                                <button type="submit" class="btn btn-outline-success btn-sm" title="Completar">
-                                                    <i class="bi bi-check-circle"></i>
+                                    @if (gestionaInventario)
+                                    {
+                                        <div class="btn-group" role="group">
+                                            @if (item.EstadoReal is "Pendiente" or "En Progreso" or "Vencido")
+                                            {
+                                                <form method="post" asp-page-handler="Completar" asp-route-id="@item.Id" class="d-inline">
+                                                    <button type="submit" class="btn btn-outline-success btn-sm" title="Completar">
+                                                        <i class="bi bi-check-circle"></i>
+                                                    </button>
+                                                </form>
+                                                <form method="post" asp-page-handler="Cancelar" asp-route-id="@item.Id" class="d-inline">
+                                                    <button type="submit" class="btn btn-outline-secondary btn-sm" title="Cancelar">
+                                                        <i class="bi bi-x-circle"></i>
+                                                    </button>
+                                                </form>
+                                            }
+                                            <form method="post" asp-page-handler="Eliminar" asp-route-id="@item.Id" class="d-inline"
+                                                  onsubmit="return confirm('¿Estás seguro de eliminar este registro?');">
+                                                <button type="submit" class="btn btn-outline-danger btn-sm" title="Eliminar">
+                                                    <i class="bi bi-trash"></i>
                                                 </button>
                                             </form>
-                                            <form method="post" asp-page-handler="Cancelar" asp-route-id="@item.Id" class="d-inline">
-                                                <button type="submit" class="btn btn-outline-secondary btn-sm" title="Cancelar">
-                                                    <i class="bi bi-x-circle"></i>
-                                                </button>
-                                            </form>
-                                        }
-                                        <form method="post" asp-page-handler="Eliminar" asp-route-id="@item.Id" class="d-inline" onsubmit="return confirm('¿Estás seguro de eliminar este registro?');">
-                                            <button type="submit" class="btn btn-outline-danger btn-sm" title="Eliminar">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </form>
-                                    </div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted-custom">—</span>
+                                    }
                                 </td>
                             </tr>
                         }

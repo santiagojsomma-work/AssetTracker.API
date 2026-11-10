@@ -3,7 +3,8 @@
 @model AssetTracker.Web.Pages.Activos.IndexModel
 @{
     ViewData["Title"] = "Activos";
-    var esAdmin = User.IsInRole("Administrador");
+    var gestionaInventario = Permisos.GestionaInventario(User);
+    var esSuperAdmin = Permisos.EsSuperAdmin(User);
 }
 
 <div class="page-header">
@@ -59,9 +60,12 @@
     <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
         <h5 class="mb-0"><i class="bi bi-list-ul"></i> Listado de activos</h5>
         <div class="d-flex gap-2">
-            <a asp-page="Create" class="btn btn-primary btn-sm">
-                <i class="bi bi-plus-circle"></i> Nuevo activo
-            </a>
+            @if (gestionaInventario)
+            {
+                <a asp-page="Create" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus-circle"></i> Nuevo activo
+                </a>
+            }
             <a asp-page="Busqueda" class="btn btn-success btn-sm">
                 <i class="bi bi-search"></i> Búsqueda en vivo
             </a>
@@ -71,7 +75,6 @@
         </div>
     </div>
 
-    @* ===== Barra de estadísticas del conjunto filtrado (paridad escritorio) ===== *@
     <div class="stats-bar">
         <span class="stat-item">Total: <strong>@Model.Total</strong></span>
         <span class="stat-item stat-verde">Disponibles: <strong>@Model.Disponibles</strong></span>
@@ -140,11 +143,14 @@
                                            class="btn btn-outline-info btn-sm" title="Ver detalles">
                                             <i class="bi bi-eye"></i>
                                         </a>
-                                        <a asp-page="Edit" asp-route-id="@item.Id"
-                                           class="btn btn-outline-primary btn-sm" title="Editar">
-                                            <i class="bi bi-pencil"></i>
-                                        </a>
-                                        @if (esAdmin)
+                                        @if (gestionaInventario)
+                                        {
+                                            <a asp-page="Edit" asp-route-id="@item.Id"
+                                               class="btn btn-outline-primary btn-sm" title="Editar">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                        }
+                                        @if (esSuperAdmin)
                                         {
                                             <a asp-page="Delete" asp-route-id="@item.Id"
                                                class="btn btn-outline-danger btn-sm" title="Eliminar">

@@ -1,6 +1,9 @@
-﻿using AssetTracker.Web.Services;
+﻿using AssetTracker.Web.Data;
+using AssetTracker.Web.Helpers;
+using AssetTracker.Web.Services;
 using AssetTracker.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
@@ -10,9 +13,11 @@ namespace AssetTracker.Web.Pages.Empleados;
 public class IndexModel : PageModel
 {
     private readonly IAssetTrackerApiClient _api;
+    private readonly UserManager<ApplicationUser> _userManager;
 
     public List<EmpleadoViewModel> Empleados { get; set; } = new();
     public string? Error { get; set; }
+    public string? DepartamentoUsuario { get; private set; }
 
     [BindProperty(SupportsGet = true)] public string? FiltroDepartamento { get; set; }
     [BindProperty(SupportsGet = true)] public string? FiltroEstado { get; set; }
@@ -27,10 +32,27 @@ public class IndexModel : PageModel
         .OrderBy(d => d)
         .ToList();
 
-    public IndexModel(IAssetTrackerApiClient api) => _api = api;
+    public bool PuedeGestionarEmpleados => Permisos.GestionaEmpleados(User);
+
+    /// <summary>
+    /// R3: AdminDepartamento solo elimina empleados de SU departamento;
+    /// Administrador tiene alcance global.
+    /// </summary>
+    public bool PuedeEliminar(EmpleadoViewModel e)
+        => Permisos.EsSuperAdmin(User)
+           || (User.IsInRole(Permisos.RolAdminDepartamento)
+               && string.Equals(DepartamentoUsuario, e.Departamento, StringComparison.OrdinalIgnoreCase));
+
+    public IndexModel(IAssetTrackerApiClient api, UserManager<ApplicationUser> userManager)
+    {
+        _api = api;
+        _userManager = userManager;
+    }
 
     public async Task OnGetAsync()
     {
+        DepartamentoUsuario = (await _userManager.GetUserAsync(User))?.Departamento;
+
         var (empleados, error) = await _api.ObtenerEmpleadosAsync();
         var lista = empleados ?? new();
 

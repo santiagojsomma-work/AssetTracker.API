@@ -2,7 +2,6 @@
 @model AssetTracker.Web.Pages.Empleados.IndexModel
 @{
     ViewData["Title"] = "Empleados";
-    var esAdmin = User.IsInRole("Administrador");
 }
 
 <div class="page-header">
@@ -39,9 +38,12 @@
             </a>
         </div>
         <div class="col-md-4 text-end">
-            <a asp-page="Create" class="btn btn-success">
-                <i class="bi bi-plus-circle"></i> Nuevo empleado
-            </a>
+            @if (Model.PuedeGestionarEmpleados)
+            {
+                <a asp-page="Create" class="btn btn-success">
+                    <i class="bi bi-plus-circle"></i> Nuevo empleado
+                </a>
+            }
         </div>
     </div>
 </form>
@@ -97,7 +99,6 @@
                                     }
                                     else
                                     {
-
                                         <span class="text-muted-custom">—</span>
                                     }
                                 </td>
@@ -115,15 +116,21 @@
                                 </td>
                                 <td class="text-center">
                                     <div class="btn-group" role="group">
-                                        <a asp-page="Details" asp-route-id="@item.Id" class="btn btn-outline-info btn-sm" title="Ver ficha">
+                                        <a asp-page="Details" asp-route-id="@item.Id"
+                                           class="btn btn-outline-info btn-sm" title="Ver ficha">
                                             <i class="bi bi-eye"></i>
                                         </a>
-                                        <a asp-page="Edit" asp-route-id="@item.Id" class="btn btn-outline-primary btn-sm" title="Editar">
-                                            <i class="bi bi-pencil"></i>
-                                        </a>
-                                        @if (esAdmin)
+                                        @if (Model.PuedeGestionarEmpleados)
                                         {
-                                            <a asp-page="Delete" asp-route-id="@item.Id" class="btn btn-outline-danger btn-sm" title="Eliminar">
+                                            <a asp-page="Edit" asp-route-id="@item.Id"
+                                               class="btn btn-outline-primary btn-sm" title="Editar">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                        }
+                                        @if (Model.PuedeEliminar(item))
+                                        {
+                                            <a asp-page="Delete" asp-route-id="@item.Id"
+                                               class="btn btn-outline-danger btn-sm" title="Eliminar">
                                                 <i class="bi bi-trash"></i>
                                             </a>
                                         }
