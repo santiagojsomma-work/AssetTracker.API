@@ -1,4 +1,5 @@
 ﻿using AssetTracker.Web.DTOs;
+using AssetTracker.Web.Helpers;
 using AssetTracker.Web.Services;
 using AssetTracker.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;
@@ -7,7 +8,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace AssetTracker.Web.Pages.Asignaciones;
 
-[Authorize]
+[Authorize(Roles = Permisos.RolesInventario)]
 public class CreateModel : PageModel
 {
     private readonly IAssetTrackerApiClient _api;
@@ -42,7 +43,6 @@ public class CreateModel : PageModel
 
     private async Task CargarListasAsync()
     {
-        // CORRECCIÓN: la tupla tiene 3 elementos (Activos, TotalValor, Error)
         var (activos, _, errActivos) = await _api.ObtenerActivosAsync(estado: "Disponible");
         var (empleados, errEmpleados) = await _api.ObtenerEmpleadosAsync();
 

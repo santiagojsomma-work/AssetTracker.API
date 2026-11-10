@@ -1,4 +1,5 @@
 ﻿using AssetTracker.Web.DTOs;
+using AssetTracker.Web.Helpers;
 using AssetTracker.Web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -6,7 +7,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace AssetTracker.Web.Pages.Activos;
 
-[Authorize]
+[Authorize(Roles = Permisos.RolesInventario)]
 public class CreateModel : PageModel
 {
     private readonly IAssetTrackerApiClient _api;

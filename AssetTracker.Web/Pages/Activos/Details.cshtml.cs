@@ -1,4 +1,5 @@
-﻿using AssetTracker.Web.Services;
+﻿using AssetTracker.Web.Helpers;
+using AssetTracker.Web.Services;
 using AssetTracker.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -27,6 +28,9 @@ public class DetailsModel : PageModel
 
     public async Task<IActionResult> OnPostCambiarEstadoAsync(int id)
     {
+        // R3: solo Inventario/Administrador puede cambiar estados
+        if (!Permisos.GestionaInventario(User)) return Forbid();
+
         var resultado = await _api.CambiarEstadoActivoAsync(id, NuevoEstado);
         if (resultado.Ok) return RedirectToPage("Details", new { id });
 

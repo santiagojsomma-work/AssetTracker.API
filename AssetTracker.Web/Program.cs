@@ -24,6 +24,14 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
+// ====== R3: cookie de autenticación con páginas propias ======
+// (ConfigureApplicationCookie es la API correcta: IdentityOptions no expone "Cookies")
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/Account/Login";
+    options.AccessDeniedPath = "/Account/AccessDenied";
+});
+
 // ====== Razor Pages + autorización ======
 builder.Services.AddRazorPages();
 builder.Services.AddAuthorization();

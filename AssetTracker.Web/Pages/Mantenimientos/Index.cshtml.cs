@@ -1,4 +1,5 @@
-﻿using AssetTracker.Web.Services;
+﻿using AssetTracker.Web.Helpers;
+using AssetTracker.Web.Services;
 using AssetTracker.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,7 +18,6 @@ public class IndexModel : PageModel
     [BindProperty(SupportsGet = true)] public string? FiltroEstado { get; set; }
     [BindProperty(SupportsGet = true)] public string? FiltroTipo { get; set; }
 
-    // Estadísticas para la barra superior
     public int Total => Mantenimientos.Count;
     public int Pendientes => Mantenimientos.Count(m => m.EstadoReal is "Pendiente" or "En Progreso");
     public int Vencidos => Mantenimientos.Count(m => m.EstadoReal == "Vencido");
@@ -28,7 +28,6 @@ public class IndexModel : PageModel
 
     public async Task OnGetAsync()
     {
-        // Usamos 'listaMantenimientos' para evitar conflicto con la propiedad 'Mantenimientos'
         var (listaMantenimientos, error) = await _api.ObtenerMantenimientosAsync(FiltroEstado, FiltroTipo);
         Mantenimientos = listaMantenimientos ?? new();
         Error = error;
@@ -36,6 +35,8 @@ public class IndexModel : PageModel
 
     public async Task<IActionResult> OnPostCompletarAsync(int id)
     {
+        if (!Permisos.GestionaInventario(User)) return Forbid();
+
         var resultado = await _api.CambiarEstadoMantenimientoAsync(id, "Completado");
         if (!resultado.Ok) Error = $"Error al completar: {resultado.Error}";
 
@@ -45,6 +46,8 @@ public class IndexModel : PageModel
 
     public async Task<IActionResult> OnPostCancelarAsync(int id)
     {
+        if (!Permisos.GestionaInventario(User)) return Forbid();
+
         var resultado = await _api.CambiarEstadoMantenimientoAsync(id, "Cancelado");
         if (!resultado.Ok) Error = $"Error al cancelar: {resultado.Error}";
 
@@ -54,6 +57,8 @@ public class IndexModel : PageModel
 
     public async Task<IActionResult> OnPostEliminarAsync(int id)
     {
+        if (!Permisos.GestionaInventario(User)) return Forbid();
+
         var resultado = await _api.EliminarMantenimientoAsync(id);
         if (!resultado.Ok) Error = $"Error al eliminar: {resultado.Error}";
 

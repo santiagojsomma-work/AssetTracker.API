@@ -1,4 +1,5 @@
-﻿using AssetTracker.Web.Services;
+﻿using AssetTracker.Web.Helpers;
+using AssetTracker.Web.Services;
 using AssetTracker.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -6,7 +7,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace AssetTracker.Web.Pages.Asignaciones;
 
-[Authorize]
+[Authorize(Roles = Permisos.RolesInventario)]
 public class DeleteModel : PageModel
 {
     private readonly IAssetTrackerApiClient _api;
