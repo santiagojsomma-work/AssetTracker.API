@@ -315,18 +315,6 @@ En modo **Desarrollo**, el sistema siembra automáticamente 4 usuarios al arranc
 
 ---
 
-## 📸 Capturas de pantalla
-
-- Dashboard
-- Listado de activos con depreciación
-- Ficha de empleado con asignaciones
-- Mantenimientos con filas coloreadas por estado
-- Búsqueda en vivo
-
-> 📁 Las capturas se almacenan en la carpeta `docs/screenshots/`.
-
----
-
 ## 👥 Autor
 
 **Santiago Somma**
