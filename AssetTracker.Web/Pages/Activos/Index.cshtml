@@ -16,9 +16,13 @@
     <div class="row g-2 align-items-end">
         <div class="col-md-3">
             <label class="form-label mb-1">Buscar</label>
-            <input type="text" name="FiltroTexto" value="@Model.FiltroTexto"
-                   class="form-control" placeholder="Nombre, código, serie o licencia…" />
-            <div class="form-text"><a asp-page="Busqueda">¿Búsqueda global en vivo?</a></div>
+            <div class="input-group">
+                <input type="text" name="FiltroTexto" value="@Model.FiltroTexto"
+                       class="form-control" placeholder="Nombre, código, serie o licencia…" />
+                <a asp-page="Busqueda" class="btn btn-outline-secondary" title="Búsqueda global en vivo">
+                    <i class="bi bi-lightning-charge"></i>
+                </a>
+            </div>
         </div>
         <div class="col-md-3">
             <label class="form-label mb-1">Estado</label>

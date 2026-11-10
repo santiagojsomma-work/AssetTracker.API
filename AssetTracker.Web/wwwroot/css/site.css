@@ -642,3 +642,10 @@ body {
 .dl-detalle dd {
     margin-bottom: .5rem;
 }
+.stat-valor {
+    font-size: clamp(1.05rem, 1.8vw, 1.6rem); /* se adapta al ancho disponible */
+    font-weight: 700;
+    white-space: nowrap; /* nunca parte el $ del número */
+    font-variant-numeric: tabular-nums; /* dígitos alineados */
+    line-height: 1.1;
+}
