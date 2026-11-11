@@ -1,0 +1,16 @@
+﻿@page
+@{
+    ViewData["Title"] = "Acceso denegado";
+}
+
+<div class="text-center mt-5">
+    <h1 class="display-4 text-danger">🚫 Acceso denegado</h1>
+    <p class="lead">No tenés permisos suficientes para realizar esta acción.</p>
+    <p class="text-muted">
+        Esta acción requiere el rol <strong>Administrador</strong>.
+        Contactá al administrador del sistema si creés que esto es un error.
+    </p>
+    <hr />
+    <a asp-page="/Index" class="btn btn-secondary">Volver al inicio</a>
+    <a asp-page="/Account/Login" class="btn btn-primary">Iniciar sesión con otra cuenta</a>
+</div>a

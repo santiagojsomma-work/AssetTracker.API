@@ -1,0 +1,60 @@
+﻿@page
+@model AssetTracker.Web.Pages.Asignaciones.CreateModel
+@{
+    ViewData["Title"] = "Nueva asignación";
+}
+
+<div class="page-header">
+    <h1><i class="bi bi-plus-circle"></i> Nueva asignación</h1>
+    <p class="lead">Asigná un activo disponible a un empleado</p>
+</div>
+
+@if (Model.Error is not null)
+{
+    <div class="alert alert-danger"><i class="bi bi-exclamation-triangle"></i> @Model.Error</div>
+}
+
+<div class="card">
+    <div class="card-header"><i class="bi bi-arrow-left-right"></i> Datos de la asignación</div>
+    <div class="card-body">
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="Input.ActivoId" class="form-label">Activo (solo disponibles)</label>
+                    <select asp-for="Input.ActivoId" class="form-select">
+                        <option value="">-- Seleccioná un activo --</option>
+                        @foreach (var item in Model.ActivosDisponibles)
+                        {
+                            <option value="@item.Id">@item.CodigoInterno — @item.Nombre</option>
+                        }
+                    </select>
+                    <span asp-validation-for="Input.ActivoId" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Input.EmpleadoId" class="form-label">Empleado</label>
+                    <select asp-for="Input.EmpleadoId" class="form-select">
+                        <option value="">-- Seleccioná un empleado --</option>
+                        @foreach (var item in Model.Empleados)
+                        {
+                            <option value="@item.Id">@item.NombreCompleto (@item.Departamento)</option>
+                        }
+                    </select>
+                    <span asp-validation-for="Input.EmpleadoId" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check2-circle"></i> Asignar
+                </button>
+                <a asp-page="Index" class="btn btn-outline-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

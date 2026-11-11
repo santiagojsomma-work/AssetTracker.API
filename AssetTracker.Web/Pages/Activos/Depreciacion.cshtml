@@ -1,0 +1,173 @@
+﻿@page
+@model AssetTracker.Web.Pages.Activos.DepreciacionModel
+@{
+    ViewData["Title"] = "Reporte de depreciación";
+}
+
+<div class="page-header">
+    <h1><i class="bi bi-graph-down-arrow"></i> Reporte de depreciación</h1>
+    <p class="lead">Método de línea recta · Vida útil: físicos 5 años, digitales 3 años</p>
+</div>
+
+@if (Model.Error is not null)
+{
+    <div class="alert alert-danger"><i class="bi bi-exclamation-triangle"></i> @Model.Error</div>
+}
+else
+{
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card stat-card bg-primary">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-label">Valor original</div>
+                        <div class="stat-value">@Model.TotalValorOriginal.ToString("C")</div>
+                    </div>
+                    <div class="stat-icon"><i class="bi bi-cash-stack"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stat-card bg-warning">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-label">Depreciación acumulada</div>
+                        <div class="stat-value">@Model.TotalAcumulada.ToString("C")</div>
+                    </div>
+                    <div class="stat-icon"><i class="bi bi-graph-down-arrow"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stat-card bg-success">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-label">Valor en libros</div>
+                        <div class="stat-value">@Model.TotalValorEnLibros.ToString("C")</div>
+                    </div>
+                    <div class="stat-icon"><i class="bi bi-book"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* ===== NUEVO: Reporte agrupado por estado (4B) ===== *@
+    @if (Model.ReportePorEstado.Count > 0)
+    {
+        <div class="card mb-4">
+            <div class="card-header"><i class="bi bi-bar-chart"></i> Resumen por estado</div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Estado</th>
+                                <th class="text-center">Cantidad</th>
+                                <th class="text-end">Valor total</th>
+                                <th class="text-end">Promedio</th>
+                                <th class="text-end">Máximo</th>
+                                <th class="text-end">Mínimo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var r in Model.ReportePorEstado)
+                            {
+                                <tr>
+                                    <td><strong>@r.Estado</strong></td>
+                                    <td class="text-center">@r.Cantidad</td>
+                                    <td class="text-end">@r.ValorTotal.ToString("C")</td>
+                                    <td class="text-end">@r.ValorPromedio.ToString("C")</td>
+                                    <td class="text-end">@r.ValorMaximo.ToString("C")</td>
+                                    <td class="text-end">@r.ValorMinimo.ToString("C")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card">
+                <div class="card-header"><i class="bi bi-table"></i> Detalle por activo</div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Nombre</th>
+                                    <th class="text-center">Años</th>
+                                    <th class="text-end">Dep. anual</th>
+                                    <th class="text-end">Acumulada</th>
+                                    <th class="text-end">Valor en libros</th>
+                                    <th class="text-center">%</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var f in Model.Filas)
+                                {
+                                    <tr>
+                                        <td><code>@f.Codigo</code></td>
+                                        <td>
+                                            <div class="fw-bold">@f.Nombre</div>
+                                            <small class="text-muted-custom">@f.Tipo · vida útil @f.VidaUtilAnios años</small>
+                                        </td>
+                                        <td class="text-center">@f.AniosTranscurridos</td>
+                                        <td class="text-end">@f.DepreciacionAnual.ToString("C")</td>
+                                        <td class="text-end fw-bold" style="color:#d97706;">@f.Acumulada.ToString("C")</td>
+                                        <td class="text-end fw-bold" style="color:#059669;">@f.ValorEnLibros.ToString("C")</td>
+                                        <td class="text-center">
+                                            <span class="badge-estado @(f.Porcentaje >= 100 ? "estado-robado" : f.Porcentaje >= 50 ? "estado-mantenimiento" : "estado-disponible")">
+                                                @f.Porcentaje%
+                                            </span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card">
+                <div class="card-header"><i class="bi bi-bar-chart"></i> Valor en libros vs. depreciación</div>
+                <div class="card-body">
+                    <canvas id="chartDepreciacion" height="280"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <script>
+        const etiquetas = @Html.Raw(Model.EtiquetasJson);
+        const enLibros = @Html.Raw(Model.ValoresLibrosJson);
+        const acumulada = @Html.Raw(Model.AcumuladaJson);
+
+        new Chart(document.getElementById('chartDepreciacion'), {
+            type: 'bar',
+            data: {
+                labels: etiquetas,
+                datasets: [
+                    { label: 'Valor en libros', data: enLibros, backgroundColor: 'rgba(16,185,129,.75)' },
+                    { label: 'Depreciación acumulada', data: acumulada, backgroundColor: 'rgba(245,158,11,.75)' }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: { stacked: true },
+                    y: { stacked: true, ticks: { callback: v => '$' + Number(v).toLocaleString('es-AR') } }
+                },
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+    </script>
+}

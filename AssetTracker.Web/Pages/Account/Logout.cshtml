@@ -1,0 +1,14 @@
+﻿@page
+@model AssetTracker.Web.Pages.Account.LogoutModel
+@{
+    ViewData["Title"] = "Cerrar sesión";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<p>¿Confirmás que querés cerrar sesión?</p>
+
+<form method="post">
+    <button type="submit" class="btn btn-danger">Cerrar sesión</button>
+    <a asp-page="/Index" class="btn btn-secondary">Cancelar</a>
+</form>

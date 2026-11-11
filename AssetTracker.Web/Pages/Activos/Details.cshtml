@@ -1,0 +1,145 @@
+﻿@page "{id:int}"
+@using AssetTracker.Web.Helpers
+@model AssetTracker.Web.Pages.Activos.DetailsModel
+@{
+    ViewData["Title"] = "Detalle del activo";
+    var gestionaInventario = Permisos.GestionaInventario(User);
+    var esSuperAdmin = Permisos.EsSuperAdmin(User);
+}
+
+@if (Model.Error is not null)
+{
+    <div class="alert alert-danger"><i class="bi bi-exclamation-triangle"></i> @Model.Error</div>
+}
+
+@if (Model.Activo is null)
+{
+    <div class="alert alert-warning">No se encontró el activo solicitado.</div>
+    <a asp-page="Index" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Volver al listado</a>
+}
+else
+{
+    var a = Model.Activo;
+    var dep = DepreciacionHelper.Calcular(a);
+
+    <div class="page-header">
+        <h1>
+            <i class="bi @(a.TipoActivo == "Físico" ? "bi-box" : "bi-laptop")"></i> @a.Nombre
+            <span class="badge-estado @EstadoActivoHelper.Badge(a.Estado) ms-2">
+                <i class="bi @EstadoActivoHelper.Icono(a.Estado)"></i> @a.Estado
+            </span>
+        </h1>
+        <p class="lead mb-0"><code>@a.CodigoInterno</code> — @a.TipoActivo</p>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header"><i class="bi bi-info-circle"></i> Información general</div>
+                <div class="card-body">
+                    <dl class="row mb-0 dl-detalle">
+                        <dt class="col-sm-5">Código interno</dt>
+                        <dd class="col-sm-7"><code>@a.CodigoInterno</code></dd>
+
+                        <dt class="col-sm-5">Tipo</dt>
+                        <dd class="col-sm-7">@a.TipoActivo</dd>
+
+                        <dt class="col-sm-5">Fecha de adquisición</dt>
+                        <dd class="col-sm-7">@a.FechaAdquisicion.ToString("dd/MM/yyyy")</dd>
+
+                        <dt class="col-sm-5">Valor original</dt>
+                        <dd class="col-sm-7 celda-monto">@a.ValorOriginal.ToString("C")</dd>
+
+                        @if (a.TipoActivo == "Físico")
+                        {
+                            <dt class="col-sm-5">Número de serie</dt>
+                            <dd class="col-sm-7">@(a.NumeroSerie ?? "—")</dd>
+
+                            <dt class="col-sm-5">Ubicación</dt>
+                            <dd class="col-sm-7">@(a.Ubicacion ?? "—")</dd>
+                        }
+                        else
+                        {
+                            <dt class="col-sm-5">Clave de licencia</dt>
+                            <dd class="col-sm-7"><code>@(a.ClaveLicencia ?? "—")</code></dd>
+
+                            <dt class="col-sm-5">Vencimiento licencia</dt>
+                            <dd class="col-sm-7">@(a.FechaVencimientoLicencia?.ToString("dd/MM/yyyy") ?? "Sin vencimiento")</dd>
+                        }
+                    </dl>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header"><i class="bi bi-graph-down-arrow"></i> Depreciación</div>
+                <div class="card-body">
+                    <dl class="row mb-0 dl-detalle">
+                        <dt class="col-sm-5">Vida útil</dt>
+                        <dd class="col-sm-7">@dep.VidaUtilAnios años</dd>
+
+                        <dt class="col-sm-5">Años transcurridos</dt>
+                        <dd class="col-sm-7">@dep.AniosTranscurridos</dd>
+
+                        <dt class="col-sm-5">Depreciación anual</dt>
+                        <dd class="col-sm-7 celda-monto">@dep.DepreciacionAnual.ToString("C")</dd>
+
+                        <dt class="col-sm-5">Depreciación acumulada</dt>
+                        <dd class="col-sm-7 celda-monto">-@dep.DepreciacionAcumulada.ToString("C")</dd>
+
+                        <dt class="col-sm-5">Valor en libros</dt>
+                        <dd class="col-sm-7 celda-monto fw-bold" style="color:#059669;">@dep.ValorEnLibros.ToString("C")</dd>
+
+                        <dt class="col-sm-5">% depreciado</dt>
+                        <dd class="col-sm-7">@dep.PorcentajeDepreciado.ToString("0.##")%</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            @if (gestionaInventario)
+            {
+                <div class="card">
+                    <div class="card-header"><i class="bi bi-arrow-repeat"></i> Cambiar estado</div>
+                    <div class="card-body">
+                        <form method="post" asp-page-handler="CambiarEstado" asp-route-id="@a.Id">
+                            <div class="input-group">
+                                <select asp-for="NuevoEstado" class="form-select">
+                                    <option value="">-- Nuevo estado --</option>
+                                    @foreach (var estado in Model.Estados)
+                                    {
+                                        <option value="@estado" selected="@(estado == a.Estado)">@estado</option>
+                                    }
+                                </select>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check2-circle"></i> Aplicar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            }
+
+            <div class="card mt-4">
+                <div class="card-header"><i class="bi bi-lightning-charge"></i> Acciones</div>
+                <div class="card-body d-flex gap-2 flex-wrap">
+                    @if (gestionaInventario)
+                    {
+                        <a asp-page="Edit" asp-route-id="@a.Id" class="btn btn-primary">
+                            <i class="bi bi-pencil"></i> Editar
+                        </a>
+                    }
+                    @if (esSuperAdmin)
+                    {
+                        <a asp-page="Delete" asp-route-id="@a.Id" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> Eliminar
+                        </a>
+                    }
+                    <a asp-page="Index" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Volver al listado
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+}

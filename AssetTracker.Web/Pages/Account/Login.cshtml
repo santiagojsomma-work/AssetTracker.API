@@ -1,0 +1,88 @@
+﻿@page
+@model AssetTracker.Web.Pages.Account.LoginModel
+@{
+    ViewData["Title"] = "Iniciar sesión";
+    Layout = null; // Sin layout para pantalla completa
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Iniciar sesión - AssetTracker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="~/css/site.css" />
+    <style>
+            body {
+                background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+                min-height: 100vh;
+            }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <h2><i class="bi bi-box-seam"></i> AssetTracker</h2>
+                <p>Iniciá sesión para continuar</p>
+            </div>
+
+            <div class="login-body">
+                <form method="post">
+                    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Input.Email" class="form-label">
+                            <i class="bi bi-envelope"></i> Email
+                        </label>
+                        <input asp-for="Input.Email" class="form-control form-control-lg"
+                               placeholder="tu@email.com" />
+                        <span asp-validation-for="Input.Email" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Input.Password" class="form-label">
+                            <i class="bi bi-lock"></i> Contraseña
+                        </label>
+                        <input asp-for="Input.Password" class="form-control form-control-lg"
+                               placeholder="••••••••" />
+                        <span asp-validation-for="Input.Password" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        <input asp-for="Input.RememberMe" class="form-check-input" />
+                        <label asp-for="Input.RememberMe" class="form-check-label">
+                            Recordarme
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg w-100 mb-3">
+                        <i class="bi bi-box-arrow-in-right"></i> Iniciar sesión
+                    </button>
+
+                    <div class="text-center">
+                        <p class="text-muted-custom mb-0">
+                          
+                        </p>
+                    </div>
+                </form>
+
+                <hr class="my-4">
+
+                <div class="alert alert-info mb-0" style="background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.3);">
+                    <small>
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Cuenta admin:</strong> admin@assettracker.com / Admin123!
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <partial name="_ValidationScriptsPartial" />
+</body>
+</html>

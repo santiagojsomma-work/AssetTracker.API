@@ -1,0 +1,79 @@
+﻿@page
+@model AssetTracker.Web.Pages.Empleados.CreateModel
+@{
+    ViewData["Title"] = "Nuevo empleado";
+}
+
+<div class="page-header">
+    <h1><i class="bi bi-person-plus"></i> Nuevo empleado</h1>
+    <p class="lead">Datos personales y laborales del empleado</p>
+</div>
+
+@if (Model.Error is not null)
+{
+    <div class="alert alert-danger"><i class="bi bi-exclamation-triangle"></i> @Model.Error</div>
+}
+
+<div class="card">
+    <div class="card-header"><i class="bi bi-person-badge"></i> Información personal</div>
+    <div class="card-body">
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="Input.NombreCompleto" class="form-label">Nombre completo</label>
+                    <input asp-for="Input.NombreCompleto" class="form-control" />
+                    <span asp-validation-for="Input.NombreCompleto" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Input.Documento" class="form-label">Documento</label>
+                    <input asp-for="Input.Documento" class="form-control" />
+                    <span asp-validation-for="Input.Documento" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Input.Correo" class="form-label">Correo electrónico</label>
+                    <input asp-for="Input.Correo" type="email" class="form-control" />
+                    <span asp-validation-for="Input.Correo" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Input.Telefono" class="form-label">Teléfono</label>
+                    <input asp-for="Input.Telefono" class="form-control" />
+                    <span asp-validation-for="Input.Telefono" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Input.Cargo" class="form-label">Cargo</label>
+                    <input asp-for="Input.Cargo" class="form-control" />
+                    <span asp-validation-for="Input.Cargo" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Input.Departamento" class="form-label">Departamento</label>
+                    <input asp-for="Input.Departamento" class="form-control" />
+                    <span asp-validation-for="Input.Departamento" class="text-danger"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Input.FechaIngreso" class="form-label">Fecha de ingreso</label>
+                    <input asp-for="Input.FechaIngreso" type="date" class="form-control" />
+                    <span asp-validation-for="Input.FechaIngreso" class="text-danger"></span>
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <div class="form-check mb-2">
+                        <input asp-for="Input.Activo" class="form-check-input" />
+                        <label asp-for="Input.Activo" class="form-check-label">Empleado activo</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check2-circle"></i> Guardar
+                </button>
+                <a asp-page="Index" class="btn btn-outline-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,114 @@
+﻿@page
+@using AssetTracker.Web.Helpers
+@model AssetTracker.Web.Pages.Account.RegisterModel
+@{
+    ViewData["Title"] = "Crear usuario";
+}
+
+<div class="page-header">
+    <h1><i class="bi bi-person-plus-gear"></i> Crear usuario</h1>
+    <p class="lead">Alta de cuentas con rol y departamento — exclusivo del Administrador</p>
+</div>
+
+@if (TempData["Exito"] is string exito)
+{
+    <div class="alert alert-success"><i class="bi bi-check2-circle"></i> @exito</div>
+}
+
+@if (Model.WarningMessage is not null)
+{
+    <div class="alert alert-warning"><i class="bi bi-exclamation-triangle"></i> @Model.WarningMessage</div>
+}
+
+<div class="card">
+    <div class="card-header"><i class="bi bi-shield-lock"></i> Datos de la cuenta</div>
+    <div class="card-body">
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="Input.Email" class="form-label">Email</label>
+                    <input asp-for="Input.Email" class="form-control" />
+                    <span asp-validation-for="Input.Email" class="text-danger"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="Input.Password" class="form-label">Contraseña</label>
+                    <input asp-for="Input.Password" class="form-control" />
+                    <span asp-validation-for="Input.Password" class="text-danger"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="Input.ConfirmPassword" class="form-label">Confirmar</label>
+                    <input asp-for="Input.ConfirmPassword" class="form-control" />
+                    <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Input.Rol" class="form-label">Rol (tipo de cuenta)</label>
+                    <select asp-for="Input.Rol" class="form-select">
+                        <option value="@Permisos.RolEmpleado">Empleado (solo lectura)</option>
+                        <option value="@Permisos.RolAdminInventario">AdminInventario (activos y asignaciones)</option>
+                        <option value="@Permisos.RolAdminDepartamento">AdminDepartamento (empleados de su depto)</option>
+                        <option value="@Permisos.RolAdministrador">Administrador (acceso total)</option>
+                    </select>
+                    <span asp-validation-for="Input.Rol" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Input.Departamento" class="form-label">Departamento</label>
+                    <select asp-for="Input.Departamento" class="form-select">
+                        <option value="">-- Seleccioná --</option>
+                        @foreach (var d in CatalogosEmpleados.Departamentos)
+                        {
+                            <option value="@d">@d</option>
+                        }
+                    </select>
+                    <span asp-validation-for="Input.Departamento" class="text-danger"></span>
+                    <div class="form-text">Obligatorio para AdminDepartamento: define su alcance de borrado.</div>
+                </div>
+            </div>
+
+            <hr class="my-4" />
+
+            <div class="form-check mb-3">
+                <input asp-for="Input.CrearFichaEmpleado" class="form-check-input" />
+                <label asp-for="Input.CrearFichaEmpleado" class="form-check-label">
+                    Crear también la ficha de empleado (RRHH) con estos datos
+                </label>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="Input.NombreCompleto" class="form-label">Nombre completo</label>
+                    <input asp-for="Input.NombreCompleto" class="form-control" />
+                    <span asp-validation-for="Input.NombreCompleto" class="text-danger"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="Input.Documento" class="form-label">Documento</label>
+                    <input asp-for="Input.Documento" class="form-control" />
+                    <span asp-validation-for="Input.Documento" class="text-danger"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="Input.Cargo" class="form-label">Cargo</label>
+                    <select asp-for="Input.Cargo" class="form-select">
+                        <option value="">-- Seleccioná --</option>
+                        @foreach (var c in CatalogosEmpleados.Cargos)
+                        {
+                            <option value="@c">@c</option>
+                        }
+                    </select>
+                    <span asp-validation-for="Input.Cargo" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-person-plus"></i> Crear usuario
+                </button>
+                <a asp-page="/Index" class="btn btn-outline-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
